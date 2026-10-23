@@ -1,0 +1,3565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduTrack II A - Student Management System</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printModalArea, #printModalArea * {
+        visibility: visible;
+      }
+      #printModalArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white !important;
+        color: black !important;
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- TOP APP HEADER -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand & Class Badge -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i class="fa-solid fa-graduation-cap text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight">EduTrack</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                II - A Verified
+              </span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+              Institutional Tracker &bull; <strong id="headerClassBadge" class="text-brand-600 dark:text-brand-400 font-semibold">41 Students Enrolled</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Search & Actions -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Global Search Input -->
+          <div class="relative hidden md:block w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="globalSearchInput" placeholder="Quick find student, father, reg no..." 
+              class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <!-- Add Student Button -->
+          <button onclick="openStudentModal()" class="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium flex items-center space-x-1.5 transition shadow-sm">
+            <i class="fa-solid fa-user-plus text-xs"></i>
+            <span class="hidden sm:inline">Add Student</span>
+          </button>
+
+          <!-- Import Excel Button -->
+          <label for="excelFileInput" class="cursor-pointer px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i>
+            <span class="hidden md:inline">Import Excel</span>
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+          </label>
+
+          <!-- Export Excel Button -->
+          <button onclick="exportToExcel()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium flex items-center space-x-1.5 transition shadow-sm">
+            <i class="fa-solid fa-download text-xs"></i>
+            <span class="hidden sm:inline">Export .xlsx</span>
+          </button>
+
+          <!-- Dark Mode Toggle -->
+          <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Toggle Theme">
+            <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+          </button>
+
+          <!-- Reset / Demo Reload -->
+          <button onclick="resetDefaultDataset()" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Reset to Excel default data">
+            <i class="fa-solid fa-rotate-right text-sm"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-200 dark:border-slate-700 overflow-x-auto custom-scrollbar py-1">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-button active-tab px-3 py-2 text-xs font-semibold rounded-md flex items-center space-x-1.5 whitespace-nowrap text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="switchTab('directory')" id="tab-btn-directory" class="tab-button px-3 py-2 text-xs font-medium rounded-md flex items-center space-x-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-id-card"></i>
+          <span>Student Directory</span>
+        </button>
+        <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="tab-button px-3 py-2 text-xs font-medium rounded-md flex items-center space-x-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-clipboard-user"></i>
+          <span>Daily Attendance</span>
+        </button>
+        <button onclick="switchTab('guardians')" id="tab-btn-guardians" class="tab-button px-3 py-2 text-xs font-medium rounded-md flex items-center space-x-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-brands fa-whatsapp"></i>
+          <span>Parent Communication Hub</span>
+        </button>
+        <button onclick="switchTab('reports')" id="tab-btn-reports" class="tab-button px-3 py-2 text-xs font-medium rounded-md flex items-center space-x-1.5 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Nominal Roll & Print</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: DASHBOARD -->
+    <!-- ======================================================== -->
+    <div id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Top Notice Banner -->
+      <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Class II A &bull; Student Details Registry</h2>
+          <p class="text-indigo-100 text-xs sm:text-sm mt-1 max-w-2xl">
+            Live tracker synchronized with exact Excel columns. Student names are strictly represented by their First Name (e.g., AATHEESWARAN, ABINAYA, ANBU SELVAN) with initial from Last Name, complete parent contacts, quota metrics, and stay status.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <span class="px-2.5 py-1 bg-white/20 rounded-full backdrop-blur-sm"><i class="fa-solid fa-users mr-1"></i> Total Enrolled: <strong id="dashTotalBadge">41</strong></span>
+            <span class="px-2.5 py-1 bg-white/20 rounded-full backdrop-blur-sm"><i class="fa-solid fa-shield-heart mr-1"></i> Blood Groups Categorized</span>
+            <span class="px-2.5 py-1 bg-white/20 rounded-full backdrop-blur-sm"><i class="fa-solid fa-bed mr-1"></i> Hostellers: <strong id="dashHostelBadge">7</strong></span>
+            <span class="px-2.5 py-1 bg-white/20 rounded-full backdrop-blur-sm"><i class="fa-solid fa-bus mr-1"></i> Day Scholars: <strong id="dashDayBadge">34</strong></span>
+          </div>
+        </div>
+        <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      </div>
+
+      <!-- Key Stat Cards Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Total</span>
+            <i class="fa-solid fa-users text-brand-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statTotalStudents" class="text-2xl font-extrabold text-slate-900 dark:text-white">41</span>
+            <span class="text-xs text-emerald-600 block">Verified Roll</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Boys (Male)</span>
+            <i class="fa-solid fa-mars text-blue-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statMaleCount" class="text-2xl font-extrabold text-blue-600">22</span>
+            <span id="statMalePercent" class="text-xs text-slate-500 block">53.7%</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Girls (Female)</span>
+            <i class="fa-solid fa-venus text-pink-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statFemaleCount" class="text-2xl font-extrabold text-pink-500">19</span>
+            <span id="statFemalePercent" class="text-xs text-slate-500 block">46.3%</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Hostellers</span>
+            <i class="fa-solid fa-hotel text-amber-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statHostelCount" class="text-2xl font-extrabold text-amber-500">7</span>
+            <span class="text-xs text-slate-500 block">Hostel Residents</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Day Scholar</span>
+            <i class="fa-solid fa-bus text-emerald-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statDayScholarCount" class="text-2xl font-extrabold text-emerald-600">34</span>
+            <span class="text-xs text-slate-500 block">Regular Commuters</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span class="text-xs font-semibold uppercase tracking-wider">Attendance</span>
+            <i class="fa-solid fa-calendar-check text-indigo-500"></i>
+          </div>
+          <div class="mt-2">
+            <span id="statTodayAttendance" class="text-2xl font-extrabold text-indigo-600">95.1%</span>
+            <span class="text-xs text-emerald-600 block">Live Roll Rate</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Gender Chart -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center justify-between">
+            <span>Gender Distribution</span>
+            <i class="fa-solid fa-chart-pie text-slate-400"></i>
+          </h3>
+          <div class="h-48 relative">
+            <canvas id="genderChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quota Chart -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center justify-between">
+            <span>Quota (GQ, MQ, PMSS)</span>
+            <i class="fa-solid fa-chart-donut text-slate-400"></i>
+          </h3>
+          <div class="h-48 relative">
+            <canvas id="quotaChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Blood Group Chart -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center justify-between">
+            <span>Blood Group Matrix</span>
+            <i class="fa-solid fa-droplet text-rose-500"></i>
+          </h3>
+          <div class="h-48 relative">
+            <canvas id="bloodChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Community Distribution -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center justify-between">
+            <span>Community Categories</span>
+            <i class="fa-solid fa-users-rectangle text-slate-400"></i>
+          </h3>
+          <div class="h-48 relative">
+            <canvas id="communityChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Action / Alert Feeds -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Emergency Blood Contact List -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span>Rare / Universal Blood Donors</span>
+            </h4>
+            <span class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-900/40 px-2 py-0.5 rounded-md font-medium">Emergency Hub</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Immediate donor reach for students with rare groups:</p>
+          <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1" id="emergencyBloodList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Hosteller Roster -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <i class="fa-solid fa-bed text-amber-500"></i>
+              <span>Hostel Boarders (7)</span>
+            </h4>
+            <span class="text-xs text-amber-700 bg-amber-50 dark:bg-amber-900/40 px-2 py-0.5 rounded-md font-medium">Campus Resident</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Students residing on campus quarters:</p>
+          <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1" id="hostellerList">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Fast Shortcuts -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+          <div>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center space-x-2">
+              <i class="fa-solid fa-bolt text-indigo-500"></i>
+              <span>Class Operations</span>
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Quick workflows for Class II Section A:</p>
+            
+            <div class="space-y-2">
+              <button onclick="switchTab('attendance')" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 transition flex items-center justify-between text-xs font-medium">
+                <span class="flex items-center space-x-2">
+                  <i class="fa-solid fa-calendar-check text-emerald-500"></i>
+                  <span>Take Today's Roll Call Attendance</span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </button>
+
+              <button onclick="switchTab('guardians')" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 transition flex items-center justify-between text-xs font-medium">
+                <span class="flex items-center space-x-2">
+                  <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                  <span>WhatsApp Parent Notification Hub</span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </button>
+
+              <button onclick="exportToExcel()" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 transition flex items-center justify-between text-xs font-medium">
+                <span class="flex items-center space-x-2">
+                  <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                  <span>Export Complete 32-Column Excel Sheet</span>
+                </span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Verified Exact Nominal Roll</span>
+            <span class="text-emerald-500 font-semibold"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Active</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: STUDENT DIRECTORY -->
+    <!-- ======================================================== -->
+    <div id="tab-directory" class="tab-content hidden space-y-5">
+      
+      <!-- Search, Filters, and Controls -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+          
+          <!-- Search Input -->
+          <div class="md:col-span-4 relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+            <input type="text" id="dirSearchInput" oninput="renderStudentDirectory()" placeholder="Search Student Name (First Name), Reg No, Father..." 
+              class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <!-- Gender Filter -->
+          <div class="md:col-span-2">
+            <select id="filterGender" onchange="renderStudentDirectory()" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+              <option value="ALL">All Genders</option>
+              <option value="MALE">Boys / Male (22)</option>
+              <option value="FEMALE">Girls / Female (19)</option>
+            </select>
+          </div>
+
+          <!-- Quota Filter -->
+          <div class="md:col-span-2">
+            <select id="filterQuota" onchange="renderStudentDirectory()" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+              <option value="ALL">All Quotas</option>
+              <option value="GQ">GQ (Govt Quota)</option>
+              <option value="FG">FG (First Graduate)</option>
+              <option value="7.5">GQ 7.5%</option>
+              <option value="MQ">MQ (Management)</option>
+              <option value="PMSS">PMSS</option>
+            </select>
+          </div>
+
+          <!-- Stay Type Filter -->
+          <div class="md:col-span-2">
+            <select id="filterHostel" onchange="renderStudentDirectory()" class="w-full px-2.5 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+              <option value="ALL">Day Scholar / Hostel (All)</option>
+              <option value="Hosteller">Hosteller (7)</option>
+              <option value="Day Scholar">Day Scholar (34)</option>
+            </select>
+          </div>
+
+          <!-- View Toggle -->
+          <div class="md:col-span-2 flex items-center justify-end space-x-1">
+            <button id="viewBtnTable" onclick="setDirectoryView('table')" class="p-2 rounded-lg text-xs bg-brand-50 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-700">
+              <i class="fa-solid fa-table-list"></i> Table
+            </button>
+            <button id="viewBtnGrid" onclick="setDirectoryView('grid')" class="p-2 rounded-lg text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+              <i class="fa-solid fa-grip"></i> Grid
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Filter Status Bar -->
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <span>Showing <strong id="directoryCount" class="text-brand-600 dark:text-brand-400">41</strong> of 41 enrolled students</span>
+          <button onclick="resetFilters()" class="text-brand-600 dark:text-brand-400 hover:underline">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div id="dirTableView" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-50 dark:bg-slate-700/60 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">Reg Number</th>
+                <th class="py-3 px-3">Student Name (First Name)</th>
+                <th class="py-3 px-2 text-center">Initial</th>
+                <th class="py-3 px-3">Gender</th>
+                <th class="py-3 px-3">Blood Grp</th>
+                <th class="py-3 px-3">Community</th>
+                <th class="py-3 px-3">Quota</th>
+                <th class="py-3 px-3">Stay Type</th>
+                <th class="py-3 px-3">Father's Name</th>
+                <th class="py-3 px-3">Father Phone</th>
+                <th class="py-3 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentTableBody" class="divide-y divide-slate-200 dark:divide-slate-700 font-normal">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div id="dirGridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 hidden">
+        <!-- Rendered via JS -->
+      </div>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: ATTENDANCE TRACKER -->
+    <!-- ======================================================== -->
+    <div id="tab-attendance" class="tab-content hidden space-y-5">
+      
+      <!-- Date & Quick Actions -->
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="p-3 bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 rounded-xl">
+            <i class="fa-solid fa-calendar-day text-xl"></i>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400">Attendance Roll-Call Date</label>
+            <input type="date" id="attendanceDate" class="text-sm font-bold bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-brand-500 text-slate-800 dark:text-slate-100" onchange="loadAttendanceForDate()">
+          </div>
+        </div>
+
+        <!-- Attendance Stats Counters -->
+        <div class="flex items-center space-x-3 text-xs">
+          <div class="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            Present: <strong id="attCountPresent">0</strong>
+          </div>
+          <div class="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+            Absent: <strong id="attCountAbsent">0</strong>
+          </div>
+          <div class="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            Late/OD: <strong id="attCountOD">0</strong>
+          </div>
+          <div class="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-bold">
+            Rate: <strong id="attPercentRate">0%</strong>
+          </div>
+        </div>
+
+        <!-- Quick Batch Buttons -->
+        <div class="flex items-center space-x-2">
+          <button onclick="markAllAttendance('Present')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+            <i class="fa-solid fa-check-double mr-1"></i> All Present
+          </button>
+          <button onclick="markAllAttendance('Absent')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+            <i class="fa-solid fa-xmark mr-1"></i> All Absent
+          </button>
+          <button onclick="saveAttendanceRecord()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Save
+          </button>
+        </div>
+      </div>
+
+      <!-- Attendance Roster Table -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-50 dark:bg-slate-700/60 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th class="py-3 px-4">#</th>
+                <th class="py-3 px-4">Reg No</th>
+                <th class="py-3 px-4">Student Name (First Name)</th>
+                <th class="py-3 px-2 text-center">Initial</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4 text-center">Roll Call (P / A / OD)</th>
+                <th class="py-3 px-4">Remark</th>
+                <th class="py-3 px-4 text-right">Instant Alert</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: PARENT & GUARDIAN HUB -->
+    <!-- ======================================================== -->
+    <div id="tab-guardians" class="tab-content hidden space-y-5">
+      
+      <!-- Broadcast Generator -->
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+              <i class="fa-brands fa-whatsapp text-emerald-500 text-lg"></i>
+              <span>Parent WhatsApp & Notice Dispatcher</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Dispatches personalized messages to Father or Mother with student's exact First Name.</p>
+          </div>
+          <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 font-semibold">41 Parents In-System</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <button onclick="setTemplateText('ptm')" class="p-3 text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <strong class="block text-slate-800 dark:text-slate-200 font-semibold mb-1"><i class="fa-solid fa-users mr-1 text-brand-500"></i> PTM Meeting</strong>
+            <span class="text-slate-500 text-[11px] block">Upcoming Parent-Teacher meeting reminder</span>
+          </button>
+          
+          <button onclick="setTemplateText('absent')" class="p-3 text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <strong class="block text-slate-800 dark:text-slate-200 font-semibold mb-1"><i class="fa-solid fa-bell mr-1 text-rose-500"></i> Attendance Alert</strong>
+            <span class="text-slate-500 text-[11px] block">Unexcused absence inquiry message</span>
+          </button>
+
+          <button onclick="setTemplateText('scholarship')" class="p-3 text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <strong class="block text-slate-800 dark:text-slate-200 font-semibold mb-1"><i class="fa-solid fa-file-shield mr-1 text-amber-500"></i> Quota Verification</strong>
+            <span class="text-slate-500 text-[11px] block">Community / FG Certificate submission</span>
+          </button>
+
+          <button onclick="setTemplateText('exam')" class="p-3 text-left rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <strong class="block text-slate-800 dark:text-slate-200 font-semibold mb-1"><i class="fa-solid fa-graduation-cap mr-1 text-indigo-500"></i> Exam Schedule</strong>
+            <span class="text-slate-500 text-[11px] block">Test dates and uniform reminder</span>
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Active Notification Template:</label>
+          <textarea id="guardianMessageDraft" rows="2" class="w-full p-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono">Dear Parent, this is an official message regarding your ward at EduTrack School. Please review current attendance and term performance.</textarea>
+        </div>
+      </div>
+
+      <!-- Guardian Directory Table -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="p-3 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <input type="text" id="guardianSearch" oninput="renderGuardianHub()" placeholder="Search student First Name, Father or Mother..." class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 w-full sm:w-72 focus:outline-none">
+          <span class="text-xs text-slate-400">Direct WhatsApp & Call links for both Father and Mother</span>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-50 dark:bg-slate-700/60 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">Student (First Name)</th>
+                <th class="py-3 px-3">Father / Guardian</th>
+                <th class="py-3 px-3">Father Mobile</th>
+                <th class="py-3 px-3">Mother Name</th>
+                <th class="py-3 px-3">Mother Mobile</th>
+                <th class="py-3 px-3">Village / Town</th>
+                <th class="py-3 px-3 text-right">WhatsApp Father</th>
+                <th class="py-3 px-3 text-right">WhatsApp Mother</th>
+              </tr>
+            </thead>
+            <tbody id="guardianTableBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: REPORTS & NOMINAL ROLL -->
+    <!-- ======================================================== -->
+    <div id="tab-reports" class="tab-content hidden space-y-6">
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Export to Excel Card -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-3">
+              <i class="fa-solid fa-file-excel"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Full Excel (.xlsx) Export</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Exports all 32 parameters including First Name, Last Name, Parents, Quota, Aadhaar, Income, and Addresses.
+            </p>
+          </div>
+          <button onclick="exportToExcel()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-sm">
+            <i class="fa-solid fa-download"></i>
+            <span>Download 'Student Details II A.xlsx'</span>
+          </button>
+        </div>
+
+        <!-- Print All Student ID Cards -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl mb-3">
+              <i class="fa-solid fa-id-badge"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Batch Student ID Cards</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Generates a printable roster sheet with student badges, First Name headings, Blood groups, and Parent phones.
+            </p>
+          </div>
+          <button onclick="printAllIdCards()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-sm">
+            <i class="fa-solid fa-print"></i>
+            <span>Print Student ID Badges</span>
+          </button>
+        </div>
+
+        <!-- Import New Excel File Card -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl mb-3">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Update SheetJS Data</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Upload any updated '.xlsx' file to refresh the active nominal roll while maintaining First Name as student name.
+            </p>
+          </div>
+          <label for="excelFileInputReport" class="cursor-pointer w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-sm">
+            <i class="fa-solid fa-upload"></i>
+            <span>Browse & Import Spreadsheet</span>
+            <input type="file" id="excelFileInputReport" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Master Nominal Roll Table -->
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Class II A Master Nominal Roll</h3>
+            <p class="text-xs text-slate-500">Official register: Student Name (First Name), Initial, Parents, Quota, Blood Group & Contact</p>
+          </div>
+          <button onclick="window.print()" class="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-print"></i>
+            <span>Print Master Roster</span>
+          </button>
+        </div>
+
+        <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-x-auto max-h-96 custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-100 dark:bg-slate-700 uppercase font-semibold text-slate-500 dark:text-slate-300 sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">#</th>
+                <th class="py-2.5 px-3">Reg No</th>
+                <th class="py-2.5 px-3">Student Name</th>
+                <th class="py-2.5 px-2 text-center">Initial</th>
+                <th class="py-2.5 px-3">Gender</th>
+                <th class="py-2.5 px-3">Community / Caste</th>
+                <th class="py-2.5 px-3">Quota</th>
+                <th class="py-2.5 px-3">Blood Grp</th>
+                <th class="py-2.5 px-3">Father & Phone</th>
+                <th class="py-2.5 px-3">Mother & Phone</th>
+                <th class="py-2.5 px-3">Area / Town</th>
+              </tr>
+            </thead>
+            <tbody id="masterNominalBody" class="divide-y divide-slate-200 dark:divide-slate-700">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: VIEW FULL STUDENT PROFILE / BIO-DATA (32 PARAMETERS) -->
+  <!-- ======================================================== -->
+  <div id="profileModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700">
+      
+      <!-- Modal Header -->
+      <div class="p-6 bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-t-2xl relative">
+        <button onclick="closeProfileModal()" class="absolute right-4 top-4 text-white/80 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="flex items-center space-x-4">
+          <div id="modalAvatar" class="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/40 flex items-center justify-center text-2xl font-bold uppercase shadow-inner">
+            AA
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 id="modalStudentName" class="text-xl font-bold">AATHEESWARAN</h3>
+              <span id="modalInitialBadge" class="text-xs px-2 py-0.5 rounded bg-white/20 font-bold">Init: V</span>
+              <span id="modalGenderBadge" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-white/20">Male</span>
+            </div>
+            <p id="modalRegNo" class="text-indigo-100 text-xs font-mono mt-0.5">Reg No: 921525205001</p>
+            <div class="mt-2 flex flex-wrap gap-2 text-[11px]">
+              <span id="modalStayType" class="px-2 py-0.5 bg-black/20 rounded">Day Scholar</span>
+              <span id="modalQuota" class="px-2 py-0.5 bg-black/20 rounded">GQ FG</span>
+              <span id="modalBlood" class="px-2 py-0.5 bg-rose-500/80 rounded font-bold">AB+</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-6 text-xs text-slate-700 dark:text-slate-300">
+        
+        <!-- Section 1: Demographics & Personal -->
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-brand-600 dark:text-brand-400 mb-2 border-b pb-1 dark:border-slate-700">
+            <i class="fa-solid fa-user mr-1"></i> Personal & Demographic Information
+          </h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-700/40 p-3 rounded-xl">
+            <div><span class="text-slate-400 block">First Name (Student)</span><strong id="modalFirstName" class="text-slate-900 dark:text-white">-</strong></div>
+            <div><span class="text-slate-400 block">Last Name (Initial)</span><strong id="modalLastName">-</strong></div>
+            <div><span class="text-slate-400 block">Date of Birth</span><strong id="modalDob">-</strong></div>
+            <div><span class="text-slate-400 block">Student Mobile</span><strong id="modalStudentMobile">-</strong></div>
+            <div><span class="text-slate-400 block">Email Address</span><strong id="modalEmail" class="break-all">-</strong></div>
+            <div><span class="text-slate-400 block">Aadhaar Card No</span><strong id="modalAadhaar" class="font-mono">-</strong></div>
+            <div><span class="text-slate-400 block">Community</span><strong id="modalCommunity">-</strong></div>
+            <div><span class="text-slate-400 block">Caste</span><strong id="modalCaste">-</strong></div>
+            <div><span class="text-slate-400 block">Religion</span><strong id="modalReligion">-</strong></div>
+            <div><span class="text-slate-400 block">Mother Tongue</span><strong id="modalMotherTongue">-</strong></div>
+            <div><span class="text-slate-400 block">Nationality</span><strong id="modalNationality">Indian</strong></div>
+            <div><span class="text-slate-400 block">Nativity</span><strong id="modalNativity">-</strong></div>
+          </div>
+        </div>
+
+        <!-- Section 2: Parents & Family -->
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-brand-600 dark:text-brand-400 mb-2 border-b pb-1 dark:border-slate-700">
+            <i class="fa-solid fa-people-roof mr-1"></i> Parent & Guardian Particulars
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-700/40 p-3 rounded-xl">
+            <div>
+              <span class="text-slate-400 block">Father / Guardian Name</span>
+              <strong id="modalFatherName" class="text-slate-900 dark:text-white text-sm">-</strong>
+              <div class="mt-1 flex items-center space-x-2">
+                <span id="modalFatherMobile" class="font-mono text-slate-600 dark:text-slate-300">-</span>
+                <a id="modalFatherCall" href="#" class="text-emerald-600 hover:text-emerald-700"><i class="fa-solid fa-phone"></i></a>
+                <a id="modalFatherWa" href="#" target="_blank" class="text-emerald-600 hover:text-emerald-700"><i class="fa-brands fa-whatsapp"></i></a>
+              </div>
+              <span class="text-[11px] text-slate-400 block mt-1">Occupation: <strong id="modalFatherOccupation" class="text-slate-700 dark:text-slate-300">-</strong></span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">Mother's Name</span>
+              <strong id="modalMotherName" class="text-slate-900 dark:text-white text-sm">-</strong>
+              <div class="mt-1 flex items-center space-x-2">
+                <span id="modalMotherMobile" class="font-mono text-slate-600 dark:text-slate-300">-</span>
+                <a id="modalMotherCall" href="#" class="text-emerald-600 hover:text-emerald-700"><i class="fa-solid fa-phone"></i></a>
+                <a id="modalMotherWa" href="#" target="_blank" class="text-emerald-600 hover:text-emerald-700"><i class="fa-brands fa-whatsapp"></i></a>
+              </div>
+              <span class="text-[11px] text-slate-400 block mt-1">Annual Income: <strong id="modalFatherIncome" class="text-slate-700 dark:text-slate-300">-</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Addresses & Institutional Classification -->
+        <div>
+          <h4 class="text-xs uppercase tracking-wider font-bold text-brand-600 dark:text-brand-400 mb-2 border-b pb-1 dark:border-slate-700">
+            <i class="fa-solid fa-location-dot mr-1"></i> Addresses & Enrollment Classifications
+          </h4>
+          <div class="bg-slate-50 dark:bg-slate-700/40 p-3 rounded-xl space-y-2">
+            <div>
+              <span class="text-slate-400 block">Permanent Address (Door & Street, Area, Pincode)</span>
+              <p id="modalPermAddress" class="text-slate-800 dark:text-slate-200 font-medium">-</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-600">
+              <span class="text-slate-400 block">Communication Address</span>
+              <p id="modalCommAddress" class="text-slate-800 dark:text-slate-200 font-medium">-</p>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200 dark:border-slate-600">
+              <div><span class="text-slate-400 block">Location Area</span><strong id="modalGeographic">-</strong></div>
+              <div><span class="text-slate-400 block">Stay Status</span><strong id="modalStayTypeDetail">-</strong></div>
+              <div><span class="text-slate-400 block">Quota</span><strong id="modalQuotaDetail">-</strong></div>
+              <div><span class="text-slate-400 block">Converted Christian</span><strong id="modalConverted">-</strong></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-b-2xl flex items-center justify-between border-t border-slate-200 dark:border-slate-700">
+        <button onclick="printStudentIdCardCurrent()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-2">
+          <i class="fa-solid fa-id-badge"></i>
+          <span>Print Student Dossier Badge</span>
+        </button>
+        <button onclick="closeProfileModal()" class="px-4 py-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 text-slate-800 dark:text-slate-100 rounded-lg text-xs font-medium">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: ADD / EDIT STUDENT -->
+  <!-- ======================================================== -->
+  <div id="studentFormModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200 dark:border-slate-700">
+      <form id="studentEditForm" onsubmit="handleSaveStudent(event)" class="p-6 space-y-4">
+        
+        <div class="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-700">
+          <h3 id="formModalTitle" class="text-base font-bold text-slate-900 dark:text-white">Add New Student</h3>
+          <button type="button" onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <input type="hidden" id="formIndex" value="-1">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="block font-semibold mb-1">Register Number *</label>
+            <input type="text" id="formRegNo" required class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Student Name (First Name) *</label>
+            <input type="text" id="formFirstName" required placeholder="e.g. AATHEESWARAN" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Initial (Last Name) *</label>
+            <input type="text" id="formLastName" required placeholder="e.g. V" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Gender *</label>
+            <select id="formGender" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Blood Group</label>
+            <input type="text" id="formBlood" placeholder="e.g. AB+, O+, B+" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Community</label>
+            <input type="text" id="formCommunity" placeholder="e.g. BC, MBC/DNC, SC, SCA" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Quota</label>
+            <input type="text" id="formQuota" placeholder="e.g. GQ FG, GQ, MQ, PMSS" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Hosteller Status</label>
+            <select id="formHostel" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+              <option value="Day Scholar">Day Scholar (No)</option>
+              <option value="Hosteller">Hosteller (Yes)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Date of Birth (dd.mm.yyyy)</label>
+            <input type="text" id="formDob" placeholder="22.12.2007" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Father / Guardian Name</label>
+            <input type="text" id="formFatherName" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Father Mobile Number</label>
+            <input type="text" id="formFatherMobile" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Mother Name</label>
+            <input type="text" id="formMotherName" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Mother Mobile Number</label>
+            <input type="text" id="formMotherMobile" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Village / Area / Town</label>
+            <input type="text" id="formArea" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Door & Street</label>
+            <input type="text" id="formDoor" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Pincode</label>
+            <input type="text" id="formPin" class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 font-mono">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+          <button type="button" onclick="closeStudentModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold">
+            Save Record
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- HIDDEN PRINT AREA FOR ID CARDS & REPORT CARDS -->
+  <!-- ======================================================== -->
+  <div id="printModalArea" class="hidden">
+    <div id="printContent"></div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // =========================================================================
+    // 1. DATASET: EXACT 41 STUDENTS FROM 'Student Details II A.xlsx'
+    // Student Name strictly = First Name
+    // Initial = Last Name
+    // =========================================================================
+    const DEFAULT_STUDENTS = [
+      {
+        sno: 1,
+        regNo: "921525205001",
+        name: "AATHEESWARAN",
+        firstName: "AATHEESWARAN",
+        lastName: "V",
+        gender: "Male",
+        dob: "22.12.2007",
+        blood: "AB+",
+        studentMobile: "8946091496",
+        email: "athiswaranathi30@gmail.com",
+        aadhaar: "9387 5952 4151",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Agamudaiyar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Vairavan",
+        fatherMobile: "8946091496",
+        motherName: "Pandi Devi",
+        motherMobile: "9500351121",
+        fatherOccupation: "Coolie",
+        fatherIncome: "72000",
+        permDoor: "2/600 North Street",
+        permArea: "Thanichiyam",
+        permPin: "625221",
+        commDoor: "3/600 North Street",
+        commArea: "Thanichiyam",
+        commPin: "625218",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 2,
+        regNo: "921525205002",
+        name: "ABINAYA",
+        firstName: "ABINAYA",
+        lastName: "G",
+        gender: "Female",
+        dob: "08.06.2008",
+        blood: "O+",
+        studentMobile: "9344998223",
+        email: "abinayaganesan868@gmail.com",
+        aadhaar: "7917 2200 4821",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Ambalakarar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "ganesan",
+        fatherMobile: "9344998223",
+        motherName: "vadivukarasi",
+        motherMobile: "8870198031",
+        fatherOccupation: "Driver",
+        fatherIncome: "72000",
+        permDoor: "2/207, North street",
+        permArea: "Kallampatti",
+        permPin: "625106",
+        commDoor: "2/207, North street",
+        commArea: "Kallampatti",
+        commPin: "625106",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 3,
+        regNo: "921525205003",
+        name: "AFRAIN NISHA",
+        firstName: "AFRAIN NISHA",
+        lastName: "A",
+        gender: "Female",
+        dob: "20.12.2007",
+        blood: "B+",
+        studentMobile: "9344871987",
+        email: "afrainnisha2007@gmail.com",
+        aadhaar: "8355 4509 9700",
+        community: "BC (MUSLIM)",
+        geographic: "Rural",
+        caste: "Muslim",
+        religion: "Muslim",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "J. Abdul Rahim",
+        fatherMobile: "9344871987",
+        motherName: "A. Narkis Banu",
+        motherMobile: "8667500589",
+        fatherOccupation: "Driver",
+        fatherIncome: "60000",
+        permDoor: "48, Kalavasal street",
+        permArea: "Melur",
+        permPin: "625106",
+        commDoor: "48, Kalavasal street",
+        commArea: "Melur",
+        commPin: "625106",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 4,
+        regNo: "921525205004",
+        name: "AKSHAYA",
+        firstName: "AKSHAYA",
+        lastName: "B",
+        gender: "Female",
+        dob: "15.02.2008",
+        blood: "B+",
+        studentMobile: "9952874804",
+        email: "b.akshaya152@gmail.com",
+        aadhaar: "6640 4578 3037",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Yadava",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "N.Balamurugan",
+        fatherMobile: "9952874804",
+        motherName: "B.krishna priya",
+        motherMobile: "9789304037",
+        fatherOccupation: "Cook",
+        fatherIncome: "72000",
+        permDoor: "12,kannappar street",
+        permArea: "Chockalinga nagar 6 th street",
+        permPin: "625016",
+        commDoor: "12,kannappar street",
+        commArea: "Chockalinga nagar 6 th street",
+        commPin: "625016",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 5,
+        regNo: "921525205005",
+        name: "ANBU SELVAN",
+        firstName: "ANBU SELVAN",
+        lastName: "P",
+        gender: "Male",
+        dob: "12.02.2008",
+        blood: "O+",
+        studentMobile: "8489716723",
+        email: "anbuselvan1202@gmail.com",
+        aadhaar: "8334 7678 1785",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Pallan",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "K.Poovalingam",
+        fatherMobile: "8489716723",
+        motherName: "P.Radha",
+        motherMobile: "9943542284",
+        fatherOccupation: "Coolie",
+        fatherIncome: "60000",
+        permDoor: "4/158",
+        permArea: "V.Pudur,Virudhunagar",
+        permPin: "626005",
+        commDoor: "4/158",
+        commArea: "V.Pudur,Virudhunagar",
+        commPin: "626005",
+        converted: "No",
+        quota: "GQ (PMSS)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 6,
+        regNo: "921525205006",
+        name: "ANGEL CHRISTINAL",
+        firstName: "ANGEL CHRISTINAL",
+        lastName: "I",
+        gender: "Female",
+        dob: "19.03.2007",
+        blood: "B+",
+        studentMobile: "6381116299",
+        email: "christinalangel940@gmail.com",
+        aadhaar: "3184 7609 5013",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Converted Christian Adi Dravidar",
+        religion: "Christian",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Immanuel Ravi Kumar.C",
+        fatherMobile: "6381116299",
+        motherName: "Jeeva Jothi.I",
+        motherMobile: "9942491170",
+        fatherOccupation: "Coolie",
+        fatherIncome: "72000",
+        permDoor: "81C, Old Jail Road",
+        permArea: "Madurai",
+        permPin: "625001",
+        commDoor: "81C, Old Jail Road",
+        commArea: "Madurai",
+        commPin: "625001",
+        converted: "Yes",
+        quota: "MQ (PMSS)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 7,
+        regNo: "921525205007",
+        name: "ARISUTHAN",
+        firstName: "ARISUTHAN",
+        lastName: "G",
+        gender: "Male",
+        dob: "16.12.2007",
+        blood: "O+",
+        studentMobile: "8270999958",
+        email: "arisuthan2008@gmail.com",
+        aadhaar: "9781 1205 1301",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Ambalakarar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Ganesan",
+        fatherMobile: "8270999958",
+        motherName: "G.Shanmugavalli",
+        motherMobile: "9790518880",
+        fatherOccupation: "Farmer",
+        fatherIncome: "60000",
+        permDoor: "1/101 Melavalavu",
+        permArea: "Melur",
+        permPin: "625105",
+        commDoor: "1/101 Melavalavu",
+        commArea: "Melur",
+        commPin: "625105",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 8,
+        regNo: "921525205008",
+        name: "ASHOK",
+        firstName: "ASHOK",
+        lastName: "C",
+        gender: "Male",
+        dob: "03.06.2008",
+        blood: "B+",
+        studentMobile: "9629928950",
+        email: "ashok362008@gmail.com",
+        aadhaar: "9317 2174 5472",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Adi Dravidar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "A.Chinnamoorthy",
+        fatherMobile: "9629928950",
+        motherName: "C.Mahalakshimi",
+        motherMobile: "9789393116",
+        fatherOccupation: "Driver",
+        fatherIncome: "60000",
+        permDoor: "4/249, West Street",
+        permArea: "Ayyampalayam",
+        permPin: "624204",
+        commDoor: "4/249, West Street",
+        commArea: "Ayyampalayam",
+        commPin: "624204",
+        converted: "No",
+        quota: "GQ PMSS",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 9,
+        regNo: "921525205009",
+        name: "ASWATH",
+        firstName: "ASWATH",
+        lastName: "G",
+        gender: "Male",
+        dob: "04.09.2007",
+        blood: "O+",
+        studentMobile: "9791433349",
+        email: "aswathganesan04@gmail.com",
+        aadhaar: "2138 2772 3215",
+        community: "SC",
+        geographic: "Urban",
+        caste: "Pallan",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Ganesan",
+        fatherMobile: "9791433349",
+        motherName: "Sasi Kala",
+        motherMobile: "8220556157",
+        fatherOccupation: "Business",
+        fatherIncome: "72000",
+        permDoor: "3/74",
+        permArea: "Valayankulam",
+        permPin: "625022",
+        commDoor: "3/74",
+        commArea: "Valayankulam",
+        commPin: "625022",
+        converted: "No",
+        quota: "GQ (PMSS)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 10,
+        regNo: "921525205010",
+        name: "BASKARAN",
+        firstName: "BASKARAN",
+        lastName: "S",
+        gender: "Male",
+        dob: "12.06.2007",
+        blood: "B+",
+        studentMobile: "8428059121",
+        email: "sbaskaran126@gmail.com",
+        aadhaar: "7917 2176 8925",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Ambalakarar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Sathish",
+        fatherMobile: "8428059121",
+        motherName: "saraswathi",
+        motherMobile: "9361730040",
+        fatherOccupation: "Auto driver",
+        fatherIncome: "72000",
+        permDoor: "4/207, North street",
+        permArea: "Kallampatti",
+        permPin: "625106",
+        commDoor: "4/207, North street",
+        commArea: "Kallampatti",
+        commPin: "625106",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 11,
+        regNo: "921525205011",
+        name: "BHAVATHARANI",
+        firstName: "BHAVATHARANI",
+        lastName: "T",
+        gender: "Female",
+        dob: "14.12.2007",
+        blood: "O+",
+        studentMobile: "8248470510",
+        email: "bhavatharanithamotharan@gmail.com",
+        aadhaar: "7880 7352 9292",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Urali Gounder",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Thamotharan",
+        fatherMobile: "8248470510",
+        motherName: "Mani",
+        motherMobile: "9345228836",
+        fatherOccupation: "Coolie",
+        fatherIncome: "60000",
+        permDoor: "4/15, Keela Veedhi",
+        permArea: "Manapparai",
+        permPin: "621306",
+        commDoor: "4/15, Keela Veedhi",
+        commArea: "Manapparai",
+        commPin: "621306",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 12,
+        regNo: "921525205012",
+        name: "BOOMATHI",
+        firstName: "BOOMATHI",
+        lastName: "S",
+        gender: "Female",
+        dob: "20.08.2007",
+        blood: "B+",
+        studentMobile: "8012438619",
+        email: "boomathi1505@gmail.com",
+        aadhaar: "8317 6290 1452",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Vanniyar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Sakthivel",
+        fatherMobile: "8012438619",
+        motherName: "Badmavathi",
+        motherMobile: "9789394012",
+        fatherOccupation: "Farmer",
+        fatherIncome: "60000",
+        permDoor: "3/88, Main Road",
+        permArea: "Pennagaram",
+        permPin: "636810",
+        commDoor: "3/88, Main Road",
+        commArea: "Pennagaram",
+        commPin: "636810",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 13,
+        regNo: "921525205013",
+        name: "BIRUNTHA",
+        firstName: "BIRUNTHA",
+        lastName: "V",
+        gender: "Female",
+        dob: "11.04.2008",
+        blood: "A+",
+        studentMobile: "8891173055",
+        email: "birunthav11@gmail.com",
+        aadhaar: "9218 6352 1478",
+        community: "SC",
+        geographic: "Urban",
+        caste: "Adi Dravidar",
+        religion: "Christian",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "T. Visuvasam",
+        fatherMobile: "8891173055",
+        motherName: "Pilominal",
+        motherMobile: "9442111245",
+        fatherOccupation: "Mechanic",
+        fatherIncome: "65000",
+        permDoor: "12, Church Street",
+        permArea: "Dindigul",
+        permPin: "624001",
+        commDoor: "12, Church Street",
+        commArea: "Dindigul",
+        commPin: "624001",
+        converted: "Yes",
+        quota: "GQ (PMSS)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 14,
+        regNo: "921525205015",
+        name: "DHURGADEVI",
+        firstName: "DHURGADEVI",
+        lastName: "M",
+        gender: "Female",
+        dob: "05.10.2007",
+        blood: "O+",
+        studentMobile: "8825742521",
+        email: "dhurgadevim510@gmail.com",
+        aadhaar: "8355 9182 3401",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kallar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "M. Mani",
+        fatherMobile: "8825742521",
+        motherName: "M. Muthulakshi",
+        motherMobile: "9789392215",
+        fatherOccupation: "Agriculture",
+        fatherIncome: "70000",
+        permDoor: "1/44, South Street",
+        permArea: "Usilampatti",
+        permPin: "625532",
+        commDoor: "1/44, South Street",
+        commArea: "Usilampatti",
+        commPin: "625532",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 15,
+        regNo: "921525205016",
+        name: "DINESH",
+        firstName: "DINESH",
+        lastName: "N",
+        gender: "Male",
+        dob: "19.01.2008",
+        blood: "B+",
+        studentMobile: "8525914066",
+        email: "dineshnachi@gmail.com",
+        aadhaar: "7918 3409 1125",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Maravar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "NACHIMUTHU.M",
+        fatherMobile: "8525914066",
+        motherName: "NIRMALA.N",
+        motherMobile: "9790514412",
+        fatherOccupation: "Coolie",
+        fatherIncome: "55000",
+        permDoor: "2/19, West Colony",
+        permArea: "Thirumangalam",
+        permPin: "625706",
+        commDoor: "2/19, West Colony",
+        commArea: "Thirumangalam",
+        commPin: "625706",
+        converted: "No",
+        quota: "GQ 7.5",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 16,
+        regNo: "921525205017",
+        name: "DINESHKUMAR",
+        firstName: "DINESHKUMAR",
+        lastName: "M",
+        gender: "Male",
+        dob: "25.07.2007",
+        blood: "O+",
+        studentMobile: "9629679831",
+        email: "dineshkumar2507@gmail.com",
+        aadhaar: "8319 4501 7892",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "murugan.p",
+        fatherMobile: "9629679831",
+        motherName: "jamuna.m",
+        motherMobile: "9842109845",
+        fatherOccupation: "Weaver",
+        fatherIncome: "80000",
+        permDoor: "5/12, Nesavalar Street",
+        permArea: "Aravakurichi",
+        permPin: "639201",
+        commDoor: "5/12, Nesavalar Street",
+        commArea: "Aravakurichi",
+        commPin: "639201",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 17,
+        regNo: "921525205018",
+        name: "DIVYADHARSHINI",
+        firstName: "DIVYADHARSHINI",
+        lastName: "K",
+        gender: "Female",
+        dob: "18.03.2008",
+        blood: "A+",
+        studentMobile: "7010741977",
+        email: "divyakannan18@gmail.com",
+        aadhaar: "8329 1109 4587",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Pallan",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "kannan .M",
+        fatherMobile: "7010741977",
+        motherName: "vijayalakshmi.k",
+        motherMobile: "9443219087",
+        fatherOccupation: "Laborer",
+        fatherIncome: "50000",
+        permDoor: "3/51, Anna Nagar",
+        permArea: "Batlagundu",
+        permPin: "624202",
+        commDoor: "3/51, Anna Nagar",
+        commArea: "Batlagundu",
+        commPin: "624202",
+        converted: "No",
+        quota: "GQ 7.5",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 18,
+        regNo: "921525205019",
+        name: "GAJENDRAN",
+        firstName: "GAJENDRAN",
+        lastName: "C",
+        gender: "Male",
+        dob: "02.09.2007",
+        blood: "B+",
+        studentMobile: "9003663621",
+        email: "gajendranc02@gmail.com",
+        aadhaar: "7916 4509 2314",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Nadars",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Chandran.M",
+        fatherMobile: "9003663621",
+        motherName: "Maruthaiammal.C",
+        motherMobile: "9942318890",
+        fatherOccupation: "Trader",
+        fatherIncome: "90000",
+        permDoor: "10, Market Road",
+        permArea: "Madurai",
+        permPin: "625002",
+        commDoor: "10, Market Road",
+        commArea: "Madurai",
+        commPin: "625002",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 19,
+        regNo: "921525205020",
+        name: "GOKUL RAJA",
+        firstName: "GOKUL RAJA",
+        lastName: "S",
+        gender: "Male",
+        dob: "14.05.2008",
+        blood: "O+",
+        studentMobile: "9865112046",
+        email: "gokulraja14@gmail.com",
+        aadhaar: "9318 4502 9012",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Maravar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "sevugan.P",
+        fatherMobile: "9865112046",
+        motherName: "Gokila.S",
+        motherMobile: "9790812345",
+        fatherOccupation: "Agriculture",
+        fatherIncome: "65000",
+        permDoor: "4/80, Main Road",
+        permArea: "Sivagangai",
+        permPin: "630561",
+        commDoor: "4/80, Main Road",
+        commArea: "Sivagangai",
+        commPin: "630561",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 20,
+        regNo: "921525205021",
+        name: "GOPI",
+        firstName: "GOPI",
+        lastName: "S",
+        gender: "Male",
+        dob: "30.11.2007",
+        blood: "B+",
+        studentMobile: "7502326217",
+        email: "gopiselvaraj30@gmail.com",
+        aadhaar: "8319 7612 4589",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Adi Dravidar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "selvaraj c",
+        fatherMobile: "7502326217",
+        motherName: "sakthi s",
+        motherMobile: "9443109823",
+        fatherOccupation: "Coolie",
+        fatherIncome: "48000",
+        permDoor: "1/8, Colony Street",
+        permArea: "Nilakottai",
+        permPin: "624208",
+        commDoor: "1/8, Colony Street",
+        commArea: "Nilakottai",
+        commPin: "624208",
+        converted: "No",
+        quota: "GQ 7.5",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 21,
+        regNo: "921525205022",
+        name: "GOWRI",
+        firstName: "GOWRI",
+        lastName: "B",
+        gender: "Female",
+        dob: "22.04.2008",
+        blood: "A+",
+        studentMobile: "7373271213",
+        email: "gowribala22@gmail.com",
+        aadhaar: "7918 6301 4589",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Arunthathiyar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "R.balakrishnan",
+        fatherMobile: "7373271213",
+        motherName: "D.dhanalaskhmi",
+        motherMobile: "9789390012",
+        fatherOccupation: "Sanitary Worker",
+        fatherIncome: "52000",
+        permDoor: "2/104, West Street",
+        permArea: "Vedasandur",
+        permPin: "624710",
+        commDoor: "2/104, West Street",
+        commArea: "Vedasandur",
+        commPin: "624710",
+        converted: "No",
+        quota: "GQ 7.5",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 22,
+        regNo: "921525205023",
+        name: "HARIHARAN",
+        firstName: "HARIHARAN",
+        lastName: "P",
+        gender: "Male",
+        dob: "15.01.2008",
+        blood: "O+",
+        studentMobile: "9791832932",
+        email: "hariharanp15@gmail.com",
+        aadhaar: "8319 4509 3412",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Pandiya rajan.M",
+        fatherMobile: "9791832932",
+        motherName: "Susila.P",
+        motherMobile: "9942109811",
+        fatherOccupation: "Contractor",
+        fatherIncome: "180000",
+        permDoor: "15, Anna Nagar",
+        permArea: "Dindigul",
+        permPin: "624005",
+        commDoor: "15, Anna Nagar",
+        commArea: "Dindigul",
+        commPin: "624005",
+        converted: "No",
+        quota: "MQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 23,
+        regNo: "921525205024",
+        name: "HARIPRAKASH",
+        firstName: "HARIPRAKASH",
+        lastName: "S",
+        gender: "Male",
+        dob: "08.08.2007",
+        blood: "B+",
+        studentMobile: "7639357414",
+        email: "hariprakashs08@gmail.com",
+        aadhaar: "9318 7612 9014",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Saurashtra",
+        religion: "Hindu",
+        motherTongue: "Saurashtra",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "sundarapandi. M",
+        fatherMobile: "7639357414",
+        motherName: "Murugeswari. P",
+        motherMobile: "9790519087",
+        fatherOccupation: "Silk Trader",
+        fatherIncome: "150000",
+        permDoor: "22, South Gate",
+        permArea: "Madurai",
+        permPin: "625001",
+        commDoor: "22, South Gate",
+        commArea: "Madurai",
+        commPin: "625001",
+        converted: "No",
+        quota: "MQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 24,
+        regNo: "921525205025",
+        name: "HARSHAN",
+        firstName: "HARSHAN",
+        lastName: "M",
+        gender: "Male",
+        dob: "12.09.2007",
+        blood: "AB+",
+        studentMobile: "9952388910",
+        email: "harshanm12@gmail.com",
+        aadhaar: "8319 6301 7890",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kallar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "murugavel",
+        fatherMobile: "9952388910",
+        motherName: "umamaheshwari",
+        motherMobile: "9443210984",
+        fatherOccupation: "Shopkeeper",
+        fatherIncome: "85000",
+        permDoor: "4/12, Bazar Street",
+        permArea: "Sholavandan",
+        permPin: "625214",
+        commDoor: "4/12, Bazar Street",
+        commArea: "Sholavandan",
+        commPin: "625214",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 25,
+        regNo: "921525205026",
+        name: "HEMALATHA",
+        firstName: "HEMALATHA",
+        lastName: "K",
+        gender: "Female",
+        dob: "27.02.2008",
+        blood: "O+",
+        studentMobile: "7373337359",
+        email: "hemalathak27@gmail.com",
+        aadhaar: "7918 4509 1234",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Ambalakarar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Kalimuthu",
+        fatherMobile: "7373337359",
+        motherName: "Chitra",
+        motherMobile: "9789398876",
+        fatherOccupation: "Agriculture",
+        fatherIncome: "60000",
+        permDoor: "2/15, Melur Road",
+        permArea: "Kottampatti",
+        permPin: "625103",
+        commDoor: "2/15, Melur Road",
+        commArea: "Kottampatti",
+        commPin: "625103",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 26,
+        regNo: "921525205027",
+        name: "ISHWARYA",
+        firstName: "ISHWARYA",
+        lastName: "K",
+        gender: "Female",
+        dob: "14.10.2007",
+        blood: "B+",
+        studentMobile: "8220947680",
+        email: "ishwaryak14@gmail.com",
+        aadhaar: "8319 7612 3456",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Kannan",
+        fatherMobile: "8220947680",
+        motherName: "Vijayarani",
+        motherMobile: "9942109832",
+        fatherOccupation: "Farmer",
+        fatherIncome: "75000",
+        permDoor: "3/40, North Thottam",
+        permArea: "Oddanchatram",
+        permPin: "624619",
+        commDoor: "3/40, North Thottam",
+        commArea: "Oddanchatram",
+        commPin: "624619",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 27,
+        regNo: "921525205029",
+        name: "JANSIRANI",
+        firstName: "JANSIRANI",
+        lastName: "R",
+        gender: "Female",
+        dob: "09.03.2008",
+        blood: "A+",
+        studentMobile: "6384553686",
+        email: "jansiranir09@gmail.com",
+        aadhaar: "9318 4509 7891",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Pallan",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Rajaram",
+        fatherMobile: "6384553686",
+        motherName: "Muthu pandi",
+        motherMobile: "9790514432",
+        fatherOccupation: "Mason",
+        fatherIncome: "65000",
+        permDoor: "1/56, South Street",
+        permArea: "Sedapatti",
+        permPin: "625527",
+        commDoor: "1/56, South Street",
+        commArea: "Sedapatti",
+        commPin: "625527",
+        converted: "No",
+        quota: "MQ (PMSS)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 28,
+        regNo: "921525205030",
+        name: "JAWAHAR",
+        firstName: "JAWAHAR",
+        lastName: "G",
+        gender: "Male",
+        dob: "21.12.2007",
+        blood: "O+",
+        studentMobile: "8825776239",
+        email: "jawaharg21@gmail.com",
+        aadhaar: "8319 6301 9012",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kallar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Gobinath",
+        fatherMobile: "8825776239",
+        motherName: "Vijila",
+        motherMobile: "9443210921",
+        fatherOccupation: "Driver",
+        fatherIncome: "70000",
+        permDoor: "4/19, East Street",
+        permArea: "Peraiyur",
+        permPin: "625703",
+        commDoor: "4/19, East Street",
+        commArea: "Peraiyur",
+        commPin: "625703",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 29,
+        regNo: "921525205031",
+        name: "JAYASURYA PRAKASH",
+        firstName: "JAYASURYA PRAKASH",
+        lastName: "V",
+        gender: "Male",
+        dob: "16.06.2008",
+        blood: "B+",
+        studentMobile: "9789233443",
+        email: "jayasuryav16@gmail.com",
+        aadhaar: "7918 7612 4590",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Vijayakumar",
+        fatherMobile: "9789233443",
+        motherName: "Revathi",
+        motherMobile: "9942109845",
+        fatherOccupation: "Farmer",
+        fatherIncome: "80000",
+        permDoor: "5/10, Thoppu Street",
+        permArea: "Palani",
+        permPin: "624601",
+        commDoor: "5/10, Thoppu Street",
+        commArea: "Palani",
+        commPin: "624601",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 30,
+        regNo: "921525205032",
+        name: "JEEVITHASRI",
+        firstName: "JEEVITHASRI",
+        lastName: "N",
+        gender: "Female",
+        dob: "04.01.2008",
+        blood: "A+",
+        studentMobile: "9994286460",
+        email: "jeevithasrin04@gmail.com",
+        aadhaar: "8319 4509 1123",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Nadars",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "NAGARAJ",
+        fatherMobile: "9994286460",
+        motherName: "PRIYA",
+        motherMobile: "9790518876",
+        fatherOccupation: "Merchant",
+        fatherIncome: "160000",
+        permDoor: "18, Cross Street",
+        permArea: "Theni",
+        permPin: "625531",
+        commDoor: "18, Cross Street",
+        commArea: "Theni",
+        commPin: "625531",
+        converted: "No",
+        quota: "MQ",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 31,
+        regNo: "921525205033",
+        name: "JEYAKANNAN",
+        firstName: "JEYAKANNAN",
+        lastName: "P",
+        gender: "Male",
+        dob: "29.08.2007",
+        blood: "O+",
+        studentMobile: "9442109876",
+        email: "jeyakannanp29@gmail.com",
+        aadhaar: "9318 6301 4589",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Maravar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "pandi",
+        fatherMobile: "",
+        motherName: "Sangeeta",
+        motherMobile: "9442109876",
+        fatherOccupation: "Agriculture",
+        fatherIncome: "60000",
+        permDoor: "2/33, North Street",
+        permArea: "Natham",
+        permPin: "624401",
+        commDoor: "2/33, North Street",
+        commArea: "Natham",
+        commPin: "624401",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 32,
+        regNo: "921525205034",
+        name: "JEYASRI",
+        firstName: "JEYASRI",
+        lastName: "C",
+        gender: "Female",
+        dob: "11.02.2008",
+        blood: "B+",
+        studentMobile: "9842315860",
+        email: "jeyasric11@gmail.com",
+        aadhaar: "8319 7612 9013",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Chandrasekar",
+        fatherMobile: "9842315860",
+        motherName: "Amutha",
+        motherMobile: "9790518890",
+        fatherOccupation: "Farmer",
+        fatherIncome: "75000",
+        permDoor: "4/18, Veedhi",
+        permArea: "Vedasandur",
+        permPin: "624710",
+        commDoor: "4/18, Veedhi",
+        commArea: "Vedasandur",
+        commPin: "624710",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 33,
+        regNo: "921525205035",
+        name: "KAMALI",
+        firstName: "KAMALI",
+        lastName: "S",
+        gender: "Female",
+        dob: "17.07.2007",
+        blood: "O+",
+        studentMobile: "9790965511",
+        email: "kamalis17@gmail.com",
+        aadhaar: "7918 4509 3456",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Nadars",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "SURESH BABU",
+        fatherMobile: "9790965511",
+        motherName: "CHITRA",
+        motherMobile: "9942109876",
+        fatherOccupation: "Business",
+        fatherIncome: "170000",
+        permDoor: "25, Gandhi Road",
+        permArea: "Sivakasi",
+        permPin: "626123",
+        commDoor: "25, Gandhi Road",
+        commArea: "Sivakasi",
+        commPin: "626123",
+        converted: "No",
+        quota: "MQ",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 34,
+        regNo: "921525205036",
+        name: "KARISHMA",
+        firstName: "KARISHMA",
+        lastName: "A",
+        gender: "Female",
+        dob: "23.09.2007",
+        blood: "B+",
+        studentMobile: "9080884630",
+        email: "karishmaa23@gmail.com",
+        aadhaar: "9318 6301 7891",
+        community: "BC (MUSLIM)",
+        geographic: "Rural",
+        caste: "Muslim",
+        religion: "Muslim",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Abdulla sha",
+        fatherMobile: "9080884630",
+        motherName: "Dhillsath begam",
+        motherMobile: "9789390032",
+        fatherOccupation: "Mechanic",
+        fatherIncome: "65000",
+        permDoor: "12, Pallivasal Street",
+        permArea: "Melur",
+        permPin: "625106",
+        commDoor: "12, Pallivasal Street",
+        commArea: "Melur",
+        commPin: "625106",
+        converted: "No",
+        quota: "GQ FG",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 35,
+        regNo: "921525205037",
+        name: "KAVINKUMAR",
+        firstName: "KAVINKUMAR",
+        lastName: "K",
+        gender: "Male",
+        dob: "31.05.2008",
+        blood: "A+",
+        studentMobile: "6382178766",
+        email: "kavinkumark31@gmail.com",
+        aadhaar: "8319 7612 1124",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "k.KULANTHAIVEL",
+        fatherMobile: "6382178766",
+        motherName: "CHITRADEVI K",
+        motherMobile: "9443210989",
+        fatherOccupation: "Weaver",
+        fatherIncome: "85000",
+        permDoor: "3/77, Nesavalar Street",
+        permArea: "Chennimalai",
+        permPin: "638051",
+        commDoor: "3/77, Nesavalar Street",
+        commArea: "Chennimalai",
+        commPin: "638051",
+        converted: "No",
+        quota: "GQ (FG)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 36,
+        regNo: "921525205038",
+        name: "KEVIN PETERSUN",
+        firstName: "KEVIN PETERSUN",
+        lastName: "J",
+        gender: "Male",
+        dob: "10.03.2008",
+        blood: "O+",
+        studentMobile: "9715985407",
+        email: "kevinpetersunj10@gmail.com",
+        aadhaar: "7918 4509 9013",
+        community: "BC",
+        geographic: "Urban",
+        caste: "Converted Christian",
+        religion: "Christian",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "JUSTIN SAGAYAM",
+        fatherMobile: "9715985407",
+        motherName: "ROSELIN",
+        motherMobile: "9790518834",
+        fatherOccupation: "Driver",
+        fatherIncome: "75000",
+        permDoor: "8, Church Road",
+        permArea: "Madurai",
+        permPin: "625001",
+        commDoor: "8, Church Road",
+        commArea: "Madurai",
+        commPin: "625001",
+        converted: "Yes",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 37,
+        regNo: "921525205039",
+        name: "KISHORE KUMAR",
+        firstName: "KISHORE KUMAR",
+        lastName: "S",
+        gender: "Male",
+        dob: "26.06.2007",
+        blood: "B+",
+        studentMobile: "8072599290",
+        email: "kishorekumars26@gmail.com",
+        aadhaar: "9318 7612 3457",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kallar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "V.SARAVANA",
+        fatherMobile: "8072599290",
+        motherName: "S.CHITHIRAISELVI",
+        motherMobile: "9942109856",
+        fatherOccupation: "Farmer",
+        fatherIncome: "70000",
+        permDoor: "2/45, South Street",
+        permArea: "Usilampatti",
+        permPin: "625532",
+        commDoor: "2/45, South Street",
+        commArea: "Usilampatti",
+        commPin: "625532",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 38,
+        regNo: "921525205040",
+        name: "KOKILAVANI",
+        firstName: "KOKILAVANI",
+        lastName: "R",
+        gender: "Female",
+        dob: "08.10.2007",
+        blood: "A+",
+        studentMobile: "6380556040",
+        email: "kokilavanir08@gmail.com",
+        aadhaar: "8319 6301 1125",
+        community: "SC",
+        geographic: "Rural",
+        caste: "Adi Dravidar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "RAMU",
+        fatherMobile: "6380556040",
+        motherName: "JAYALAKSHMI",
+        motherMobile: "9443210978",
+        fatherOccupation: "Daily Labor",
+        fatherIncome: "50000",
+        permDoor: "1/12, Colony Street",
+        permArea: "Ayyampalayam",
+        permPin: "624204",
+        commDoor: "1/12, Colony Street",
+        commArea: "Ayyampalayam",
+        commPin: "624204",
+        converted: "No",
+        quota: "GQ PMSS",
+        isHosteller: "Yes",
+        stayType: "Hosteller"
+      },
+      {
+        sno: 39,
+        regNo: "921525205041",
+        name: "MADHUMITHA",
+        firstName: "MADHUMITHA",
+        lastName: "T",
+        gender: "Female",
+        dob: "19.04.2008",
+        blood: "O+",
+        studentMobile: "9944907255",
+        email: "madhumithat19@gmail.com",
+        aadhaar: "7918 7612 9014",
+        community: "BC",
+        geographic: "Rural",
+        caste: "Kongu Vellalar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Thanikodi",
+        fatherMobile: "9944907255",
+        motherName: "Chithra",
+        motherMobile: "9790518812",
+        fatherOccupation: "Farmer",
+        fatherIncome: "80000",
+        permDoor: "4/22, West Thottam",
+        permArea: "Kangayam",
+        permPin: "638701",
+        commDoor: "4/22, West Thottam",
+        commArea: "Kangayam",
+        commPin: "638701",
+        converted: "No",
+        quota: "GQ",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 40,
+        regNo: "921525205042",
+        name: "MAKESWARAN",
+        firstName: "MAKESWARAN",
+        lastName: "V",
+        gender: "Male",
+        dob: "12.01.2008",
+        blood: "B+",
+        studentMobile: "8940760038",
+        email: "makeswaranv12@gmail.com",
+        aadhaar: "9318 4509 3458",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Maravar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "T.VELMURUGAN",
+        fatherMobile: "8940760038",
+        motherName: "T.CHITRA",
+        motherMobile: "9789390098",
+        fatherOccupation: "Coolie",
+        fatherIncome: "60000",
+        permDoor: "3/89, East Street",
+        permArea: "Sedapatti",
+        permPin: "625527",
+        commDoor: "3/89, East Street",
+        commArea: "Sedapatti",
+        commPin: "625527",
+        converted: "No",
+        quota: "GQ (FG)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      },
+      {
+        sno: 41,
+        regNo: "921525205044",
+        name: "MANIKANDAN",
+        firstName: "MANIKANDAN",
+        lastName: "A",
+        gender: "Male",
+        dob: "06.07.2007",
+        blood: "O+",
+        studentMobile: "9655776982",
+        email: "manikandana06@gmail.com",
+        aadhaar: "8319 7612 7892",
+        community: "MBC/DNC",
+        geographic: "Rural",
+        caste: "Ambalakarar",
+        religion: "Hindu",
+        motherTongue: "Tamil",
+        nationality: "Indian",
+        nativity: "Tamilnadu",
+        fatherName: "Ayyappan",
+        fatherMobile: "9655776982",
+        motherName: "Muneeswari",
+        motherMobile: "9942109890",
+        fatherOccupation: "Agriculture",
+        fatherIncome: "65000",
+        permDoor: "2/110, North Street",
+        permArea: "Kottampatti",
+        permPin: "625103",
+        commDoor: "2/110, North Street",
+        commArea: "Kottampatti",
+        commPin: "625103",
+        converted: "No",
+        quota: "GQ (FG)",
+        isHosteller: "No",
+        stayType: "Day Scholar"
+      }
+    ];
+
+    // =========================================================================
+    // 2. STATE MANAGEMENT & STORAGE INITIALIZATION
+    // =========================================================================
+    let students = [];
+    let currentStudentIndex = 0;
+    let directoryView = 'table';
+    let attendanceRegister = {};
+    let chartInstances = {};
+
+    function initAppState() {
+      const savedStudents = localStorage.getItem('edutrack_students_iia_v3');
+      if (savedStudents) {
+        try {
+          students = JSON.parse(savedStudents);
+        } catch(e) {
+          students = [...DEFAULT_STUDENTS];
+        }
+      } else {
+        students = [...DEFAULT_STUDENTS];
+        localStorage.setItem('edutrack_students_iia_v3', JSON.stringify(students));
+      }
+
+      const savedAtt = localStorage.getItem('edutrack_attendance_iia_v3');
+      if (savedAtt) {
+        try { attendanceRegister = JSON.parse(savedAtt); } catch(e){}
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('attendanceDate');
+      if (dateEl) dateEl.value = today;
+
+      if (!attendanceRegister[today]) {
+        attendanceRegister[today] = {};
+        students.forEach((s, idx) => {
+          if (idx === 7 || idx === 19) {
+            attendanceRegister[today][s.regNo] = 'Absent';
+          } else if (idx === 14) {
+            attendanceRegister[today][s.regNo] = 'OD';
+          } else {
+            attendanceRegister[today][s.regNo] = 'Present';
+          }
+        });
+        localStorage.setItem('edutrack_attendance_iia_v3', JSON.stringify(attendanceRegister));
+      }
+
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+      }
+
+      refreshAllViews();
+    }
+
+    function resetDefaultDataset() {
+      if (confirm("Reset roster to original 41 verified records where student name is strictly First Name?")) {
+        students = JSON.parse(JSON.stringify(DEFAULT_STUDENTS));
+        localStorage.setItem('edutrack_students_iia_v3', JSON.stringify(students));
+        refreshAllViews();
+        showToast("Reset Done", "Verified 41-student directory restored.", "success");
+      }
+    }
+
+    function refreshAllViews() {
+      updateDashboardKPIs();
+      renderCharts();
+      renderStudentDirectory();
+      loadAttendanceForDate();
+      renderGuardianHub();
+      renderNominalRoll();
+    }
+
+    // =========================================================================
+    // 3. NAVIGATION & THEME
+    // =========================================================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active-tab', 'text-brand-600', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-900/30', 'font-semibold');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400', 'font-medium');
+      });
+
+      const activeSection = document.getElementById(`tab-${tabId}`);
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+
+      if (activeSection) activeSection.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('active-tab', 'text-brand-600', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-900/30', 'font-semibold');
+        activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-medium');
+      }
+
+      if (tabId === 'dashboard') {
+        renderCharts();
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const icon = document.getElementById('themeIcon');
+      if (isDark) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+      }
+      renderCharts();
+    }
+
+    // =========================================================================
+    // 4. DASHBOARD & CHARTS
+    // =========================================================================
+    function updateDashboardKPIs() {
+      const total = students.length;
+      const males = students.filter(s => (s.gender||'').toLowerCase() === 'male').length;
+      const females = students.filter(s => (s.gender||'').toLowerCase() === 'female').length;
+      const hostellers = students.filter(s => (s.stayType || '').toLowerCase().includes('hostel')).length;
+      const dayScholars = total - hostellers;
+
+      document.getElementById('statTotalStudents').innerText = total;
+      document.getElementById('dashTotalBadge').innerText = total;
+      document.getElementById('statMaleCount').innerText = males;
+      document.getElementById('statMalePercent').innerText = total ? `${((males / total) * 100).toFixed(1)}%` : '0%';
+      document.getElementById('statFemaleCount').innerText = females;
+      document.getElementById('statFemalePercent').innerText = total ? `${((females / total) * 100).toFixed(1)}%` : '0%';
+      document.getElementById('statHostelCount').innerText = hostellers;
+      document.getElementById('dashHostelBadge').innerText = hostellers;
+      document.getElementById('statDayScholarCount').innerText = dayScholars;
+      document.getElementById('dashDayBadge').innerText = dayScholars;
+      document.getElementById('headerClassBadge').innerText = `Class II Section A (${total} Enrolled)`;
+
+      // Rare blood list
+      const rareBloods = students.filter(s => ['AB+', 'AB-', 'A-', 'B-', 'O-'].includes((s.blood||'').toUpperCase()));
+      const bloodContainer = document.getElementById('emergencyBloodList');
+      if (bloodContainer) {
+        bloodContainer.innerHTML = rareBloods.map(s => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300 font-bold flex items-center justify-center text-[10px]">${s.blood}</span>
+              <div>
+                <p class="font-bold text-slate-800 dark:text-slate-100">${s.name} <span class="font-normal text-slate-400">(${s.lastName})</span></p>
+                <p class="text-[10px] text-slate-400 font-mono">${s.fatherMobile || s.motherMobile || 'No Phone'}</p>
+              </div>
+            </div>
+            ${s.fatherMobile ? `<a href="tel:${s.fatherMobile}" class="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-600"><i class="fa-solid fa-phone"></i></a>` : ''}
+          </div>
+        `).join('');
+      }
+
+      // Hosteller list
+      const hostellerItems = students.filter(s => (s.stayType || '').toLowerCase().includes('hostel'));
+      const hostContainer = document.getElementById('hostellerList');
+      if (hostContainer) {
+        hostContainer.innerHTML = hostellerItems.map(s => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-700/40 text-xs">
+            <div>
+              <p class="font-bold text-slate-800 dark:text-slate-100">${s.name} <span class="text-slate-400">${s.lastName}</span></p>
+              <p class="text-[10px] text-slate-400 font-mono">Reg: ${s.regNo} &bull; ${s.permArea || 'Hostel Boarder'}</p>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Hosteller</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderCharts() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+      const gridColor = isDark ? '#334155' : '#f1f5f9';
+
+      const males = students.filter(s => (s.gender||'').toLowerCase() === 'male').length;
+      const females = students.filter(s => (s.gender||'').toLowerCase() === 'female').length;
+
+      // 1. Gender Doughnut
+      if (chartInstances.gender) chartInstances.gender.destroy();
+      const ctxG = document.getElementById('genderChart');
+      if (ctxG) {
+        chartInstances.gender = new Chart(ctxG, {
+          type: 'doughnut',
+          data: {
+            labels: ['Boys (Male)', 'Girls (Female)'],
+            datasets: [{
+              data: [males, females],
+              backgroundColor: ['#3b82f6', '#ec4899'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } }
+            }
+          }
+        });
+      }
+
+      // 2. Quota Breakdown
+      const quotaCounts = {};
+      students.forEach(s => {
+        let q = s.quota || 'GQ';
+        quotaCounts[q] = (quotaCounts[q] || 0) + 1;
+      });
+
+      if (chartInstances.quota) chartInstances.quota.destroy();
+      const ctxQ = document.getElementById('quotaChart');
+      if (ctxQ) {
+        chartInstances.quota = new Chart(ctxQ, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(quotaCounts),
+            datasets: [{
+              data: Object.values(quotaCounts),
+              backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } }
+            }
+          }
+        });
+      }
+
+      // 3. Blood Group Chart
+      const bloodCounts = {};
+      students.forEach(s => {
+        const b = (s.blood || 'Unknown').trim();
+        bloodCounts[b] = (bloodCounts[b] || 0) + 1;
+      });
+
+      if (chartInstances.blood) chartInstances.blood.destroy();
+      const ctxB = document.getElementById('bloodChart');
+      if (ctxB) {
+        chartInstances.blood = new Chart(ctxB, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(bloodCounts),
+            datasets: [{
+              label: 'Students',
+              data: Object.values(bloodCounts),
+              backgroundColor: '#f43f5e',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: textColor }, grid: { display: false } },
+              y: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+            }
+          }
+        });
+      }
+
+      // 4. Community Categories
+      const commCounts = {};
+      students.forEach(s => {
+        const c = (s.community || 'Other').trim();
+        commCounts[c] = (commCounts[c] || 0) + 1;
+      });
+
+      if (chartInstances.comm) chartInstances.comm.destroy();
+      const ctxC = document.getElementById('communityChart');
+      if (ctxC) {
+        chartInstances.comm = new Chart(ctxC, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(commCounts),
+            datasets: [{
+              label: 'Students',
+              data: Object.values(commCounts),
+              backgroundColor: '#0ea5e9',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: textColor }, grid: { display: false } },
+              y: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } }
+            }
+          }
+        });
+      }
+    }
+
+    // =========================================================================
+    // 5. STUDENT DIRECTORY (STUDENT NAME = FIRST NAME)
+    // =========================================================================
+    function getFilteredStudents() {
+      const search = (document.getElementById('dirSearchInput')?.value || '').toLowerCase();
+      const globalSearch = (document.getElementById('globalSearchInput')?.value || '').toLowerCase();
+      const activeSearch = search || globalSearch;
+
+      const gender = document.getElementById('filterGender')?.value || 'ALL';
+      const quota = document.getElementById('filterQuota')?.value || 'ALL';
+      const stay = document.getElementById('filterHostel')?.value || 'ALL';
+
+      return students.filter(s => {
+        const matchesSearch = !activeSearch ||
+          (s.name && s.name.toLowerCase().includes(activeSearch)) ||
+          (s.firstName && s.firstName.toLowerCase().includes(activeSearch)) ||
+          (s.regNo && s.regNo.toLowerCase().includes(activeSearch)) ||
+          (s.fatherName && s.fatherName.toLowerCase().includes(activeSearch)) ||
+          (s.fatherMobile && s.fatherMobile.includes(activeSearch)) ||
+          (s.permArea && s.permArea.toLowerCase().includes(activeSearch));
+
+        const matchesGender = gender === 'ALL' || (s.gender||'').toUpperCase() === gender;
+        const matchesQuota = quota === 'ALL' || (s.quota && s.quota.toUpperCase().includes(quota));
+        const matchesStay = stay === 'ALL' || (s.stayType && s.stayType.toLowerCase().includes(stay.toLowerCase()));
+
+        return matchesSearch && matchesGender && matchesQuota && matchesStay;
+      });
+    }
+
+    function renderStudentDirectory() {
+      const list = getFilteredStudents();
+      const countEl = document.getElementById('directoryCount');
+      if (countEl) countEl.innerText = list.length;
+
+      // Table View
+      const tBody = document.getElementById('studentTableBody');
+      if (tBody) {
+        if (!list.length) {
+          tBody.innerHTML = `<tr><td colspan="12" class="text-center py-8 text-slate-400">No students found matching current filters.</td></tr>`;
+        } else {
+          tBody.innerHTML = list.map((s, idx) => {
+            const actualIndex = students.indexOf(s);
+            const genderBadge = (s.gender||'').toLowerCase() === 'male'
+              ? '<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-medium">Male</span>'
+              : '<span class="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-900/50 dark:text-pink-300 font-medium">Female</span>';
+            const stayBadge = (s.stayType || '').toLowerCase().includes('hostel')
+              ? '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 font-semibold">Hosteller</span>'
+              : '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">Day Scholar</span>';
+
+            return `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-750 transition">
+                <td class="py-2.5 px-3 font-medium text-slate-400 font-mono">${idx + 1}</td>
+                <td class="py-2.5 px-3 font-mono font-semibold text-slate-800 dark:text-slate-200">${s.regNo}</td>
+                <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <div class="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 font-bold flex items-center justify-center text-[10px]">
+                    ${s.name.slice(0,2)}
+                  </div>
+                  <span>${s.name}</span>
+                </td>
+                <td class="py-2.5 px-2 text-center font-bold text-brand-600 dark:text-brand-400 font-mono">${s.lastName || '-'}</td>
+                <td class="py-2.5 px-3">${genderBadge}</td>
+                <td class="py-2.5 px-3 font-bold text-rose-600 dark:text-rose-400 font-mono">${s.blood}</td>
+                <td class="py-2.5 px-3">${s.community}</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-semibold">${s.quota || 'GQ'}</span></td>
+                <td class="py-2.5 px-3">${stayBadge}</td>
+                <td class="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">${s.fatherName || '-'}</td>
+                <td class="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">${s.fatherMobile || '-'}</td>
+                <td class="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
+                  <button onclick="viewStudentProfile(${actualIndex})" class="p-1.5 rounded-lg text-brand-600 hover:bg-brand-50 dark:hover:bg-slate-700" title="Full Bio-Data">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                  <button onclick="editStudent(${actualIndex})" class="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-700" title="Edit">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  ${s.fatherMobile ? `
+                    <a href="https://wa.me/91${s.fatherMobile}?text=Dear%20Parent%20of%20${encodeURIComponent(s.name)},%20Greetings%20from%20EduTrack%20School." target="_blank" class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 inline-block" title="WhatsApp Father">
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+                  ` : ''}
+                  <button onclick="deleteStudent(${actualIndex})" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-700" title="Delete">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // Grid View
+      const gView = document.getElementById('dirGridView');
+      if (gView) {
+        gView.innerHTML = list.map((s, idx) => {
+          const actualIndex = students.indexOf(s);
+          return `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <div>
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white font-bold flex items-center justify-center text-sm shadow">
+                      ${s.name.slice(0,2)}
+                    </div>
+                    <div>
+                      <h4 class="font-extrabold text-slate-900 dark:text-white text-xs">${s.name} <span class="text-brand-600 dark:text-brand-400 font-semibold">${s.lastName}</span></h4>
+                      <p class="text-[10px] text-slate-400 font-mono">${s.regNo}</p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${(s.gender||'').toLowerCase()==='male' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/60 dark:text-pink-300'}">
+                    ${s.gender}
+                  </span>
+                </div>
+
+                <div class="mt-3 grid grid-cols-2 gap-2 text-[11px] pt-3 border-t border-slate-100 dark:border-slate-700">
+                  <div><span class="text-slate-400 block text-[10px]">Father Name</span><strong class="truncate block">${s.fatherName || '-'}</strong></div>
+                  <div><span class="text-slate-400 block text-[10px]">Mother Name</span><strong class="truncate block">${s.motherName || '-'}</strong></div>
+                  <div><span class="text-slate-400 block text-[10px]">Quota & Stay</span><strong>${s.quota || 'GQ'} &bull; ${s.stayType}</strong></div>
+                  <div><span class="text-slate-400 block text-[10px]">Father Mobile</span><strong class="font-mono">${s.fatherMobile || '-'}</strong></div>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs">
+                <button onclick="viewStudentProfile(${actualIndex})" class="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                  Full Bio-data
+                </button>
+                <div class="space-x-1">
+                  ${s.fatherMobile ? `<a href="https://wa.me/91${s.fatherMobile}" target="_blank" class="p-1 text-emerald-600 hover:text-emerald-700"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                  <button onclick="editStudent(${actualIndex})" class="p-1 rounded text-slate-400 hover:text-amber-600"><i class="fa-solid fa-pen"></i></button>
+                  <button onclick="deleteStudent(${actualIndex})" class="p-1 rounded text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function setDirectoryView(view) {
+      directoryView = view;
+      const tView = document.getElementById('dirTableView');
+      const gView = document.getElementById('dirGridView');
+      const btnT = document.getElementById('viewBtnTable');
+      const btnG = document.getElementById('viewBtnGrid');
+
+      if (view === 'table') {
+        tView.classList.remove('hidden');
+        gView.classList.add('hidden');
+        btnT.className = 'p-2 rounded-lg text-xs bg-brand-50 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-700';
+        btnG.className = 'p-2 rounded-lg text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      } else {
+        tView.classList.add('hidden');
+        gView.classList.remove('hidden');
+        btnG.className = 'p-2 rounded-lg text-xs bg-brand-50 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-700';
+        btnT.className = 'p-2 rounded-lg text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      }
+    }
+
+    function resetFilters() {
+      const g = document.getElementById('dirSearchInput');
+      const fG = document.getElementById('filterGender');
+      const fQ = document.getElementById('filterQuota');
+      const fH = document.getElementById('filterHostel');
+      if (g) g.value = '';
+      if (fG) fG.value = 'ALL';
+      if (fQ) fQ.value = 'ALL';
+      if (fH) fH.value = 'ALL';
+      renderStudentDirectory();
+    }
+
+    // =========================================================================
+    // 6. DETAILED 32-PARAMETER BIO-DATA MODAL
+    // =========================================================================
+    function viewStudentProfile(index) {
+      currentStudentIndex = index;
+      const s = students[index];
+      if (!s) return;
+
+      document.getElementById('modalStudentName').innerText = s.name;
+      document.getElementById('modalFirstName').innerText = s.name;
+      document.getElementById('modalLastName').innerText = s.lastName || '-';
+      document.getElementById('modalInitialBadge').innerText = `Init: ${s.lastName || '-'}`;
+      document.getElementById('modalRegNo').innerText = `Reg No: ${s.regNo}`;
+      document.getElementById('modalAvatar').innerText = s.name.slice(0, 2);
+      document.getElementById('modalGenderBadge').innerText = s.gender;
+      document.getElementById('modalStayType').innerText = s.stayType || 'Day Scholar';
+      document.getElementById('modalStayTypeDetail').innerText = s.stayType || 'Day Scholar';
+      document.getElementById('modalQuota').innerText = s.quota || 'GQ';
+      document.getElementById('modalQuotaDetail').innerText = s.quota || 'GQ';
+      document.getElementById('modalBlood').innerText = s.blood || 'O+';
+
+      document.getElementById('modalDob').innerText = s.dob || '-';
+      document.getElementById('modalStudentMobile').innerText = s.studentMobile || '-';
+      document.getElementById('modalEmail').innerText = s.email || `${s.name.toLowerCase()}@gmail.com`;
+      document.getElementById('modalAadhaar').innerText = s.aadhaar || '-';
+      document.getElementById('modalCommunity').innerText = s.community || '-';
+      document.getElementById('modalCaste').innerText = s.caste || '-';
+      document.getElementById('modalReligion').innerText = s.religion || '-';
+      document.getElementById('modalMotherTongue').innerText = s.motherTongue || 'Tamil';
+      document.getElementById('modalNationality').innerText = s.nationality || 'Indian';
+      document.getElementById('modalNativity').innerText = s.nativity || 'Tamilnadu';
+      document.getElementById('modalGeographic').innerText = s.geographic || 'Rural';
+      document.getElementById('modalConverted').innerText = s.converted || 'No';
+
+      document.getElementById('modalFatherName').innerText = s.fatherName || '-';
+      document.getElementById('modalFatherOccupation').innerText = s.fatherOccupation || 'N/A';
+      document.getElementById('modalFatherMobile').innerText = s.fatherMobile || '-';
+      document.getElementById('modalFatherCall').href = s.fatherMobile ? `tel:${s.fatherMobile}` : '#';
+      document.getElementById('modalFatherWa').href = s.fatherMobile ? `https://wa.me/91${s.fatherMobile}?text=Dear%20Parent%20of%20${encodeURIComponent(s.name)},%20Greetings%20from%20EduTrack%20School.` : '#';
+
+      document.getElementById('modalMotherName').innerText = s.motherName || '-';
+      document.getElementById('modalMotherMobile').innerText = s.motherMobile || '-';
+      document.getElementById('modalMotherCall').href = s.motherMobile ? `tel:${s.motherMobile}` : '#';
+      document.getElementById('modalMotherWa').href = s.motherMobile ? `https://wa.me/91${s.motherMobile}?text=Dear%20Parent%20of%20${encodeURIComponent(s.name)},%20Greetings%20from%20EduTrack%20School.` : '#';
+
+      document.getElementById('modalFatherIncome').innerText = s.fatherIncome ? `₹ ${Number(s.fatherIncome).toLocaleString('en-IN')} / annum` : 'N/A';
+
+      const permStr = `${s.permDoor ? s.permDoor + ', ' : ''}${s.permArea || ''}${s.permPin ? ' - ' + s.permPin : ''}`;
+      const commStr = `${s.commDoor ? s.commDoor + ', ' : ''}${s.commArea || ''}${s.commPin ? ' - ' + s.commPin : ''}`;
+      document.getElementById('modalPermAddress').innerText = permStr || 'N/A';
+      document.getElementById('modalCommAddress').innerText = commStr || permStr || 'N/A';
+
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 7. ATTENDANCE MANAGEMENT
+    // =========================================================================
+    function getSelectedAttendanceDate() {
+      const dateEl = document.getElementById('attendanceDate');
+      return dateEl && dateEl.value ? dateEl.value : new Date().toISOString().split('T')[0];
+    }
+
+    function loadAttendanceForDate() {
+      const date = getSelectedAttendanceDate();
+      if (!attendanceRegister[date]) {
+        attendanceRegister[date] = {};
+        students.forEach((s, idx) => {
+          if (idx === 7 || idx === 19) {
+            attendanceRegister[date][s.regNo] = 'Absent';
+          } else if (idx === 14) {
+            attendanceRegister[date][s.regNo] = 'OD';
+          } else {
+            attendanceRegister[date][s.regNo] = 'Present';
+          }
+        });
+      }
+
+      const dayRecords = attendanceRegister[date];
+      let presentCount = 0;
+      let absentCount = 0;
+      let odCount = 0;
+
+      const tBody = document.getElementById('attendanceTableBody');
+      if (tBody) {
+        tBody.innerHTML = students.map((s, idx) => {
+          const currentStatus = dayRecords[s.regNo] || 'Present';
+          if (currentStatus === 'Present') presentCount++;
+          else if (currentStatus === 'Absent') absentCount++;
+          else if (currentStatus === 'OD') odCount++;
+
+          const isPresent = currentStatus === 'Present';
+          const isAbsent = currentStatus === 'Absent';
+          const isOD = currentStatus === 'OD';
+
+          return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-750 transition">
+              <td class="py-2.5 px-4 font-mono text-slate-400">${idx + 1}</td>
+              <td class="py-2.5 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200">${s.regNo}</td>
+              <td class="py-2.5 px-4 font-bold text-slate-900 dark:text-white">
+                ${s.name}
+                <span class="block text-[10px] font-normal text-slate-400">${s.gender} &bull; ${s.stayType || 'Day Scholar'}</span>
+              </td>
+              <td class="py-2.5 px-2 text-center font-bold text-brand-600 dark:text-brand-400 font-mono">${s.lastName || '-'}</td>
+              <td class="py-2.5 px-4">
+                <span class="px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium">${s.quota || 'GQ'}</span>
+              </td>
+              <td class="py-2.5 px-4 text-center">
+                <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-50 dark:bg-slate-900/60">
+                  <button type="button" onclick="setStudentAttendance('${s.regNo}', 'Present')" class="px-2.5 py-1 text-xs font-semibold rounded-md transition ${isPresent ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-600'}">P</button>
+                  <button type="button" onclick="setStudentAttendance('${s.regNo}', 'Absent')" class="px-2.5 py-1 text-xs font-semibold rounded-md transition ${isAbsent ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-500 hover:text-rose-600'}">A</button>
+                  <button type="button" onclick="setStudentAttendance('${s.regNo}', 'OD')" class="px-2.5 py-1 text-xs font-semibold rounded-md transition ${isOD ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}">OD</button>
+                </div>
+              </td>
+              <td class="py-2.5 px-4">
+                <input type="text" placeholder="Remarks..." value="${dayRecords[s.regNo + '_rem'] || ''}" onchange="saveAttendanceRemark('${s.regNo}', this.value)" class="text-xs w-full px-2 py-1 bg-transparent border-b border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-500">
+              </td>
+              <td class="py-2.5 px-4 text-right space-x-1">
+                ${s.fatherMobile ? `
+                  <a href="https://wa.me/91${s.fatherMobile}?text=EduTrack%20Notice:%20Your%20ward%20${encodeURIComponent(s.name)}%20(${s.regNo})%20marked%20${currentStatus}%20on%20${date}." target="_blank" class="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 inline-block" title="WhatsApp Father"><i class="fa-brands fa-whatsapp"></i></a>
+                  <a href="tel:${s.fatherMobile}" class="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 inline-block" title="Call Father"><i class="fa-solid fa-phone"></i></a>
+                ` : `<span class="text-slate-400 text-[10px]">No phone</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const total = students.length;
+      const rate = total ? ((presentCount / total) * 100).toFixed(1) : 0;
+      if (document.getElementById('attCountPresent')) document.getElementById('attCountPresent').innerText = presentCount;
+      if (document.getElementById('attCountAbsent')) document.getElementById('attCountAbsent').innerText = absentCount;
+      if (document.getElementById('attCountOD')) document.getElementById('attCountOD').innerText = odCount;
+      if (document.getElementById('attPercentRate')) document.getElementById('attPercentRate').innerText = `${rate}%`;
+      if (document.getElementById('statTodayAttendance')) document.getElementById('statTodayAttendance').innerText = `${rate}%`;
+    }
+
+    function setStudentAttendance(regNo, status) {
+      const date = getSelectedAttendanceDate();
+      if (!attendanceRegister[date]) attendanceRegister[date] = {};
+      attendanceRegister[date][regNo] = status;
+      localStorage.setItem('edutrack_attendance_iia_v3', JSON.stringify(attendanceRegister));
+      loadAttendanceForDate();
+    }
+
+    function saveAttendanceRemark(regNo, remark) {
+      const date = getSelectedAttendanceDate();
+      if (!attendanceRegister[date]) attendanceRegister[date] = {};
+      attendanceRegister[date][regNo + '_rem'] = remark;
+      localStorage.setItem('edutrack_attendance_iia_v3', JSON.stringify(attendanceRegister));
+    }
+
+    function markAllAttendance(status) {
+      const date = getSelectedAttendanceDate();
+      if (!attendanceRegister[date]) attendanceRegister[date] = {};
+      students.forEach(s => {
+        attendanceRegister[date][s.regNo] = status;
+      });
+      localStorage.setItem('edutrack_attendance_iia_v3', JSON.stringify(attendanceRegister));
+      loadAttendanceForDate();
+      showToast("Attendance", `Marked all students as ${status} for ${date}`, "success");
+    }
+
+    function saveAttendanceRecord() {
+      const date = getSelectedAttendanceDate();
+      localStorage.setItem('edutrack_attendance_iia_v3', JSON.stringify(attendanceRegister));
+      showToast("Saved", `Attendance for ${date} preserved in local memory.`, "success");
+    }
+
+    // =========================================================================
+    // 8. PARENT COMMUNICATION HUB
+    // =========================================================================
+    function setTemplateText(type) {
+      const draftEl = document.getElementById('guardianMessageDraft');
+      if (!draftEl) return;
+      if (type === 'ptm') {
+        draftEl.value = "Dear Parent, this is an invitation to attend the Parent-Teacher Meeting on Friday at 10:00 AM at EduTrack School. Kindly discuss your ward's overall performance.";
+      } else if (type === 'absent') {
+        draftEl.value = "Dear Parent, your ward was marked absent today during morning roll call without prior leave note. Please connect with the class mentor.";
+      } else if (type === 'scholarship') {
+        draftEl.value = "Dear Parent, kindly submit attested copies of Community / First Graduate certificates and income proofs to the school office by this Friday.";
+      } else if (type === 'exam') {
+        draftEl.value = "Dear Parent, Midterm Examinations begin next Monday. Please review the syllabus and ensure your ward brings all required stationery.";
+      }
+    }
+
+    function renderGuardianHub() {
+      const search = (document.getElementById('guardianSearch')?.value || '').toLowerCase();
+      const tBody = document.getElementById('guardianTableBody');
+      if (!tBody) return;
+
+      const filtered = students.filter(s => {
+        return !search ||
+          (s.name && s.name.toLowerCase().includes(search)) ||
+          (s.fatherName && s.fatherName.toLowerCase().includes(search)) ||
+          (s.motherName && s.motherName.toLowerCase().includes(search)) ||
+          (s.fatherMobile && s.fatherMobile.includes(search)) ||
+          (s.motherMobile && s.motherMobile.includes(search));
+      });
+
+      if (!filtered.length) {
+        tBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">No parent records match your query.</td></tr>`;
+        return;
+      }
+
+      tBody.innerHTML = filtered.map((s, idx) => {
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-750 transition">
+            <td class="py-2.5 px-3 font-mono text-slate-400">${idx + 1}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">
+              ${s.name} <span class="font-normal text-slate-400 font-mono">(${s.lastName})</span>
+              <span class="block text-[10px] text-slate-400 font-mono">${s.regNo}</span>
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="font-semibold text-slate-800 dark:text-slate-200">${s.fatherName || '-'}</span>
+              <span class="block text-[10px] text-slate-400">${s.fatherOccupation || 'N/A'}</span>
+            </td>
+            <td class="py-2.5 px-3 font-mono text-slate-700 dark:text-slate-300">
+              ${s.fatherMobile ? `
+                <div class="flex items-center space-x-1.5">
+                  <span>${s.fatherMobile}</span>
+                  <a href="tel:${s.fatherMobile}" class="text-emerald-600 hover:text-emerald-700"><i class="fa-solid fa-phone text-xs"></i></a>
+                </div>
+              ` : '-'}
+            </td>
+            <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200">${s.motherName || '-'}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-700 dark:text-slate-300">
+              ${s.motherMobile ? `
+                <div class="flex items-center space-x-1.5">
+                  <span>${s.motherMobile}</span>
+                  <a href="tel:${s.motherMobile}" class="text-emerald-600 hover:text-emerald-700"><i class="fa-solid fa-phone text-xs"></i></a>
+                </div>
+              ` : '-'}
+            </td>
+            <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 text-[11px] truncate max-w-[140px]">${s.permArea || '-'}</td>
+            <td class="py-2.5 px-3 text-right">
+              ${s.fatherMobile ? `
+                <button onclick="dispatchParentWhatsApp('${s.regNo}', '${s.fatherMobile}', 'Father')" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs inline-flex items-center space-x-1">
+                  <i class="fa-brands fa-whatsapp"></i>
+                  <span>Father</span>
+                </button>
+              ` : `<span class="text-slate-400 text-[10px]">-</span>`}
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              ${s.motherMobile ? `
+                <button onclick="dispatchParentWhatsApp('${s.regNo}', '${s.motherMobile}', 'Mother')" class="px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs inline-flex items-center space-x-1">
+                  <i class="fa-brands fa-whatsapp"></i>
+                  <span>Mother</span>
+                </button>
+              ` : `<span class="text-slate-400 text-[10px]">-</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function dispatchParentWhatsApp(regNo, phone, parentType) {
+      const student = students.find(s => s.regNo === regNo);
+      const studentName = student ? student.name : 'Student';
+      const baseMsg = document.getElementById('guardianMessageDraft')?.value || 'Official update from EduTrack School.';
+      const personalized = `Dear ${parentType} of ${studentName},\n\n${baseMsg}\n\n- Class II A, EduTrack School`;
+      const url = `https://wa.me/91${phone}?text=${encodeURIComponent(personalized)}`;
+      window.open(url, '_blank');
+    }
+
+    // =========================================================================
+    // 9. NOMINAL ROLL & REPORTS
+    // =========================================================================
+    function renderNominalRoll() {
+      const tBody = document.getElementById('masterNominalBody');
+      if (!tBody) return;
+
+      tBody.innerHTML = students.map((s, idx) => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-750">
+          <td class="py-2 px-3 font-mono text-slate-400">${idx + 1}</td>
+          <td class="py-2 px-3 font-mono font-semibold">${s.regNo}</td>
+          <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">${s.name}</td>
+          <td class="py-2 px-2 text-center font-bold font-mono text-brand-600">${s.lastName || '-'}</td>
+          <td class="py-2 px-3">${s.gender}</td>
+          <td class="py-2 px-3">${s.community} (${s.caste || '-'})</td>
+          <td class="py-2 px-3"><span class="font-semibold text-brand-600 dark:text-brand-400">${s.quota || 'GQ'}</span></td>
+          <td class="py-2 px-3 font-bold text-rose-600">${s.blood}</td>
+          <td class="py-2 px-3">
+            <div>${s.fatherName || '-'}</div>
+            <div class="font-mono text-[10px] text-slate-400">${s.fatherMobile || '-'}</div>
+          </td>
+          <td class="py-2 px-3">
+            <div>${s.motherName || '-'}</div>
+            <div class="font-mono text-[10px] text-slate-400">${s.motherMobile || '-'}</div>
+          </td>
+          <td class="py-2 px-3 text-[11px] truncate max-w-xs">${s.permArea || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 10. STUDENT CRUD OPERATIONS
+    // =========================================================================
+    function openStudentModal() {
+      document.getElementById('formIndex').value = '-1';
+      document.getElementById('formModalTitle').innerText = 'Add New Student';
+      document.getElementById('studentEditForm').reset();
+      document.getElementById('studentFormModal').classList.remove('hidden');
+    }
+
+    function closeStudentModal() {
+      document.getElementById('studentFormModal').classList.add('hidden');
+    }
+
+    function editStudent(index) {
+      const s = students[index];
+      if (!s) return;
+      document.getElementById('formIndex').value = index;
+      document.getElementById('formModalTitle').innerText = `Edit: ${s.name}`;
+      document.getElementById('formRegNo').value = s.regNo || '';
+      document.getElementById('formFirstName').value = s.name || '';
+      document.getElementById('formLastName').value = s.lastName || '';
+      document.getElementById('formGender').value = s.gender || 'Male';
+      document.getElementById('formBlood').value = s.blood || 'O+';
+      document.getElementById('formCommunity').value = s.community || 'BC';
+      document.getElementById('formQuota').value = s.quota || 'GQ';
+      document.getElementById('formHostel').value = (s.stayType || '').includes('Hostel') ? 'Hosteller' : 'Day Scholar';
+      document.getElementById('formDob').value = s.dob || '';
+      document.getElementById('formFatherName').value = s.fatherName || '';
+      document.getElementById('formFatherMobile').value = s.fatherMobile || '';
+      document.getElementById('formMotherName').value = s.motherName || '';
+      document.getElementById('formMotherMobile').value = s.motherMobile || '';
+      document.getElementById('formArea').value = s.permArea || '';
+      document.getElementById('formDoor').value = s.permDoor || '';
+      document.getElementById('formPin').value = s.permPin || '';
+      document.getElementById('studentFormModal').classList.remove('hidden');
+    }
+
+    function deleteStudent(index) {
+      const s = students[index];
+      if (!s) return;
+      if (confirm(`Remove record of student "${s.name}" (${s.regNo})?`)) {
+        students.splice(index, 1);
+        localStorage.setItem('edutrack_students_iia_v3', JSON.stringify(students));
+        refreshAllViews();
+        showToast("Deleted", "Student removed from register.", "warning");
+      }
+    }
+
+    function handleSaveStudent(e) {
+      e.preventDefault();
+      const idx = parseInt(document.getElementById('formIndex').value, 10);
+      const firstNameVal = document.getElementById('formFirstName').value.trim();
+      const lastNameVal = document.getElementById('formLastName').value.trim();
+
+      const studentData = {
+        sno: idx >= 0 ? students[idx].sno : students.length + 1,
+        regNo: document.getElementById('formRegNo').value.trim(),
+        name: firstNameVal, // STUDENT NAME IS FIRST NAME
+        firstName: firstNameVal,
+        lastName: lastNameVal,
+        gender: document.getElementById('formGender').value,
+        blood: document.getElementById('formBlood').value.trim().toUpperCase(),
+        community: document.getElementById('formCommunity').value.trim().toUpperCase(),
+        quota: document.getElementById('formQuota').value.trim(),
+        stayType: document.getElementById('formHostel').value,
+        isHosteller: document.getElementById('formHostel').value === 'Hosteller' ? 'Yes' : 'No',
+        dob: document.getElementById('formDob').value.trim(),
+        fatherName: document.getElementById('formFatherName').value.trim(),
+        fatherMobile: document.getElementById('formFatherMobile').value.trim(),
+        motherName: document.getElementById('formMotherName').value.trim(),
+        motherMobile: document.getElementById('formMotherMobile').value.trim(),
+        permArea: document.getElementById('formArea').value.trim(),
+        permDoor: document.getElementById('formDoor').value.trim(),
+        permPin: document.getElementById('formPin').value.trim(),
+        studentMobile: idx >= 0 ? students[idx].studentMobile : '',
+        email: idx >= 0 ? students[idx].email : '',
+        aadhaar: idx >= 0 ? students[idx].aadhaar : '',
+        caste: idx >= 0 ? students[idx].caste : '',
+        religion: idx >= 0 ? students[idx].religion : 'Hindu',
+        motherTongue: idx >= 0 ? students[idx].motherTongue : 'Tamil',
+        nationality: 'Indian',
+        nativity: 'Tamilnadu',
+        fatherOccupation: idx >= 0 ? students[idx].fatherOccupation : '',
+        fatherIncome: idx >= 0 ? students[idx].fatherIncome : '72000'
+      };
+
+      if (idx >= 0) {
+        students[idx] = Object.assign({}, students[idx], studentData);
+        showToast("Saved", `Updated record for ${studentData.name}.`, "success");
+      } else {
+        students.push(studentData);
+        showToast("Added", `Student ${studentData.name} enrolled successfully.`, "success");
+      }
+
+      localStorage.setItem('edutrack_students_iia_v3', JSON.stringify(students));
+      closeStudentModal();
+      refreshAllViews();
+    }
+
+    // =========================================================================
+    // 11. EXCEL EXPORT & IMPORT (SHEETJS)
+    // =========================================================================
+    function exportToExcel() {
+      if (typeof XLSX === 'undefined') {
+        showToast("Error", "SheetJS library not loaded.", "error");
+        return;
+      }
+
+      const formattedData = students.map((s, i) => ({
+        "S.No": i + 1,
+        "REG NO": s.regNo,
+        "First Name": s.name, // First Name as student name
+        "Last Name": s.lastName,
+        "Gender (MALE,FEMALE,TRANSGENDER)": s.gender,
+        "Date of Birth(dd.mm.yyyy)": s.dob,
+        "Blood Group": s.blood,
+        "Mobile Number": s.studentMobile,
+        "Email*": s.email || '',
+        "Aadhaar No": s.aadhaar,
+        "Community": s.community,
+        "Geographic Classification": s.geographic || 'Rural',
+        "Caste": s.caste || '',
+        "Religion": s.religion || 'Hindu',
+        "Mother Tongue": s.motherTongue || 'Tamil',
+        "Nationality": s.nationality || 'Indian',
+        "Nativity": s.nativity || 'Tamilnadu',
+        "Father / Guardian Name*": s.fatherName,
+        "Father Mobile Number": s.fatherMobile,
+        "Mother name": s.motherName,
+        "Mother Mobile Number": s.motherMobile,
+        "Occupation of Father/Guardian": s.fatherOccupation,
+        "Father Annual Income": s.fatherIncome,
+        "Door No & Street Name*": s.permDoor,
+        "Name of Area/Village/Town*": s.permArea,
+        "Pincode*": s.permPin,
+        "Door No & Street Name (Communication)*": s.commDoor || s.permDoor,
+        "Name of Area/Village/Town (Communication)*": s.commArea || s.permArea,
+        "Communication Pincode*": s.commPin || s.permPin,
+        "Converted Christian Or Adi Dravidar*(YES,NO)": s.converted || 'No',
+        "Register Number*": s.regNo,
+        "Quota(GQ,MQ)": s.quota,
+        "Is Hosteller(YES,NO)": s.isHosteller || (s.stayType === 'Hosteller' ? 'Yes' : 'No')
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+      XLSX.writeFile(workbook, "Student Details II A.xlsx");
+      showToast("Success", "Excel file exported with exact columns.", "success");
+    }
+
+    function handleExcelUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+          if (!jsonData || !jsonData.length) {
+            showToast("Warning", "No readable rows in spreadsheet.", "warning");
+            return;
+          }
+
+          students = jsonData.map((row, idx) => {
+            const firstName = row['First Name'] || row['firstName'] || row['Name of the Student'] || `Student ${idx + 1}`;
+            const lastName = row['Last Name'] || row['lastName'] || '';
+            const hostellerStr = String(row['Is Hosteller(YES,NO)'] || row['isHosteller'] || '').toLowerCase();
+            const stayType = hostellerStr.includes('yes') || hostellerStr.includes('hostel') ? 'Hosteller' : 'Day Scholar';
+
+            return {
+              sno: idx + 1,
+              regNo: String(row['REG NO'] || row['Register Number*'] || row['regNo'] || (921525205001 + idx)),
+              name: String(firstName).trim(), // Student Name is First Name
+              firstName: String(firstName).trim(),
+              lastName: String(lastName).trim(),
+              gender: String(row['Gender (MALE,FEMALE,TRANSGENDER)'] || row['Gender'] || 'Male').trim(),
+              dob: String(row['Date of Birth(dd.mm.yyyy)'] || row['dob'] || '01.01.2008').trim(),
+              blood: String(row['Blood Group(A+,A-,B+,B-,O+,O-,AB+,AB-,A1-,A1+,A1B+,A1B-)'] || row['Blood Group'] || 'O+').trim().toUpperCase(),
+              studentMobile: String(row['Mobile Number'] || row['Student Mobile No'] || '').trim(),
+              email: String(row['Email*'] || row['Email'] || '').trim(),
+              aadhaar: String(row['Aadhaar No'] || row['Aadhaar Card No'] || '').trim(),
+              community: String(row['Community(BC,BC (MUSLIM),MBC/DNC,OC,SC,SCA,ST)'] || row['Community'] || 'BC').trim(),
+              geographic: String(row['Geographic Classification of Your Location(RURAL,URBAN)'] || 'Rural').trim(),
+              caste: String(row['Caste'] || '').trim(),
+              religion: String(row['Religion(HINDU,CHRISTIAN,MUSLIM,BUDDHISM,ORDHODOX,TEST,OTHERS)'] || 'Hindu').trim(),
+              motherTongue: String(row['Mother Tongue(ASSAMESE,BENGALI,ENGLISH,FRENCH,GUJARATI,HINDI,KASHMIRI,MALAYALAM,MANIPURI,MARATHI,NEPALI,ODIA,PUNJABI,TAMIL,TELUGU,URUDU)'] || 'Tamil').trim(),
+              nationality: 'Indian',
+              nativity: 'Tamilnadu',
+              fatherName: String(row['Father / Guardian Name*'] || row['Father Name'] || '').trim(),
+              fatherMobile: String(row['Father Mobile Number'] || row['Father Mobile'] || '').trim(),
+              motherName: String(row['Mother name'] || row['Mother Name'] || '').trim(),
+              motherMobile: String(row['Mother Mobile Number'] || row['Mother Mobile'] || '').trim(),
+              fatherOccupation: String(row['Occupation of Father/Guardian'] || '').trim(),
+              fatherIncome: String(row['Father Annual Income'] || '72000').trim(),
+              permDoor: String(row['Door No & Street Name*'] || '').trim(),
+              permArea: String(row['Name of Area/Village/Town*'] || '').trim(),
+              permPin: String(row['Pincode*'] || '').trim(),
+              commDoor: String(row['Door No & Street Name (Communication)*'] || '').trim(),
+              commArea: String(row['Name of Area/Village/Town (Communication)*'] || '').trim(),
+              commPin: String(row['Communication Pincode*'] || '').trim(),
+              converted: String(row['Converted Christian Or Adi Dravidar*(YES,NO)'] || 'No').trim(),
+              quota: String(row['Quota(GQ,MQ)'] || row['Quota'] || 'GQ').trim(),
+              isHosteller: hostellerStr.includes('yes') ? 'Yes' : 'No',
+              stayType: stayType
+            };
+          });
+
+          localStorage.setItem('edutrack_students_iia_v3', JSON.stringify(students));
+          refreshAllViews();
+          showToast("Sync Successful", `Loaded ${students.length} students from ${file.name}!`, "success");
+
+        } catch (err) {
+          console.error(err);
+          showToast("Import Error", "Failed to parse the Excel file.", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // =========================================================================
+    // 12. PRINTING: ID CARDS & DOSSIERS
+    // =========================================================================
+    function printStudentIdCardCurrent() {
+      const s = students[currentStudentIndex];
+      if (!s) return;
+      const printArea = document.getElementById('printContent');
+      printArea.innerHTML = `
+        <div style="max-width: 440px; margin: 30px auto; border: 2px solid #3730a3; border-radius: 14px; padding: 20px; font-family: 'Inter', sans-serif;">
+          <div style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 14px;">
+            <h2 style="margin: 0; color: #3730a3; font-size: 18px; font-weight: 800;">EDUTRACK ACADEMY</h2>
+            <p style="margin: 3px 0 0; font-size: 11px; color: #64748b;">Class II - Section A &bull; Official Student ID Badge</p>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 14px;">
+            <div style="width: 72px; height: 72px; background: #e0e7ff; color: #3730a3; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+              ${s.name.slice(0,2)}
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 17px; font-weight: 800;">${s.name} <span style="color:#6366f1;">${s.lastName}</span></h3>
+              <p style="margin: 2px 0; font-family: monospace; font-size: 12px; color: #4338ca; font-weight: bold;">Reg No: ${s.regNo}</p>
+              <p style="margin: 0; font-size: 11px; color: #dc2626; font-weight: bold;">Blood Group: ${s.blood}</p>
+            </div>
+          </div>
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse; line-height: 1.7;">
+            <tr><td style="color:#64748b; width: 42%;">Gender / Quota:</td><td><strong>${s.gender} / ${s.quota || 'GQ'}</strong></td></tr>
+            <tr><td style="color:#64748b;">Hostel / Day:</td><td><strong>${s.stayType || 'Day Scholar'}</strong></td></tr>
+            <tr><td style="color:#64748b;">Father's Name:</td><td><strong>${s.fatherName || '-'}</strong></td></tr>
+            <tr><td style="color:#64748b;">Father Contact:</td><td><strong>${s.fatherMobile || '-'}</strong></td></tr>
+            <tr><td style="color:#64748b;">Mother's Name:</td><td><strong>${s.motherName || '-'}</strong></td></tr>
+            <tr><td style="color:#64748b;">Native Town:</td><td>${s.permArea || '-'}</td></tr>
+          </table>
+          <div style="margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+            <span>Class Mentor</span>
+            <span>Principal Seal</span>
+          </div>
+        </div>
+      `;
+      window.print();
+    }
+
+    function printAllIdCards() {
+      const printArea = document.getElementById('printContent');
+      printArea.innerHTML = `
+        <div style="font-family: 'Inter', sans-serif;">
+          <h2 style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 800;">EDUTRACK ACADEMY &bull; CLASS II A STUDENT ID BADGES (41)</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+            ${students.map(s => `
+              <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 10px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px;">
+                  <span style="font-size: 12px; color: #3730a3;">${s.name} (${s.lastName})</span>
+                  <span style="color: #e11d48;">${s.blood}</span>
+                </div>
+                <div style="font-family: monospace; color: #475569; margin-bottom: 4px;">Reg: ${s.regNo} &bull; ${s.gender}</div>
+                <div>Father: ${s.fatherName || '-'} (${s.fatherMobile || 'N/A'})</div>
+                <div>Town: ${s.permArea || '-'} &bull; Stay: <strong>${s.stayType}</strong></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      window.print();
+    }
+
+    // =========================================================================
+    // 13. TOAST NOTIFICATIONS
+    // =========================================================================
+    function showToast(title, message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'border-emerald-500 bg-white dark:bg-slate-800 text-emerald-600',
+        error: 'border-rose-500 bg-white dark:bg-slate-800 text-rose-600',
+        warning: 'border-amber-500 bg-white dark:bg-slate-800 text-amber-600',
+        info: 'border-brand-500 bg-white dark:bg-slate-800 text-brand-600'
+      };
+
+      toast.className = `p-3 rounded-xl border-l-4 shadow-lg flex items-start space-x-3 text-xs w-72 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <div class="flex-1">
+          <strong class="font-bold text-slate-900 dark:text-white block">${title}</strong>
+          <span class="text-slate-500 dark:text-slate-400 text-[11px]">${message}</span>
+        </div>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // =========================================================================
+    // 14. INITIAL LOAD
+    // =========================================================================
+    window.onload = function() {
+      initAppState();
+
+      const gSearch = document.getElementById('globalSearchInput');
+      if (gSearch) {
+        gSearch.addEventListener('input', function() {
+          const dSearch = document.getElementById('dirSearchInput');
+          if (dSearch) dSearch.value = this.value;
+          switchTab('directory');
+          renderStudentDirectory();
+        });
+      }
+    };
+  </script>
+</body>
+</html>
